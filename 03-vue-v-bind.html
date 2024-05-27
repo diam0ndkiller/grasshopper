@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="03-vue-v-bind.css">
     <title>Document</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 <body>
-    <img v-bind:src="url"/>
-    <script>
-        const app = Vue.createApp({
-            data() {
-                return {
-                    url: "img_beach3.jpg"
-                }
-            }
-        })
-        app.mount('#app')
-      </script>
+    <div id="image">
+        <img v-bind:src="url"/>
+    </div>
+    <div id="style_app">
+        <div v-bind:style="{ fontSize: size }">
+            Hello World
+        </div>
+    </div>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="03-vue-v-bind-01.js"></script>
+    <script src="03-vue-v-bind-02.js"></script>
 </body>
 </html>
