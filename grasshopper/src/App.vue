@@ -1,15 +1,14 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
 import TheWelcome from './components/TheWelcome.vue'
+import NavigationHeader from './components/NavigationHeader.vue'
 </script>
 
 <template>
-  <nav class="navigation" v-bind:class="{hidden: !expanded}">
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-    <HelloWorld msg="You did it!" />
+  <nav class="navigation" v-bind:class="{hidden: !navigation__expanded}">
+    <NavigationHeader/>
   </nav>
 
-  <main class="content" v-bind:class="{hidden: expanded}">
+  <main class="content" v-bind:class="{hidden: navigation__expanded}">
     <TheWelcome />
   </main>
 </template>
@@ -18,7 +17,7 @@ import TheWelcome from './components/TheWelcome.vue'
 export default {
     data() {
         return {
-            expanded: false,
+            navigation__expanded: false,
         }
     },
     computed: {

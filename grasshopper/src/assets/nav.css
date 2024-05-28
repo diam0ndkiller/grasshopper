@@ -3,6 +3,10 @@ nav.navigation {
     text-align: center;
 }
 
+.logo {
+    width: 10%;
+}
+
 @media (max-width: 1023px) {
     nav.navigation {
         width: 100vw;

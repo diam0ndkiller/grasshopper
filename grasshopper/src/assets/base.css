@@ -1,5 +1,6 @@
 body {
   min-height: 100vh;
+  min-width: 100vw;
   color: var(--color-text);
   background: var(--color-background);
   background-color: #323232;
@@ -28,11 +29,13 @@ body {
 }
 
 a, a.visited {
-  transition:color 0.2s;
+  transition:
+    color 0.2s;
   color: #bbbbbb;
 }
 
 a:hover, a.visited:hover {
-  transition:color 0.2s;
+  transition:
+    color 0.2s;
   color: #c00;
 }
