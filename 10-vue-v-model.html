@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <div id="app">
+        <h2>v-model: two way binding</h2>
+        <input type="text" v-model="inpText">
+        <p> {{ inpText }} </p>
+        <form>
+          <p>
+            Important item?
+            <label>
+              <input type="checkbox" v-model="important">
+              {{ important }}
+            </label>
+          </p>
+        </form>
+    </div>
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    inpText: 'Initial text',
+                    important: false 
+                }
+            }
+        });
+        app.mount("#app");
+    </script>
+</body>
+</html>

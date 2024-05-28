@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <div id="app">
+        <div v-show="showDiv">
+            This div tag can be hidden.
+        </div>
+        <div v-if="showDiv">
+            This div too, but it's not rendered.
+        </div>
+    </div>
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    showDiv: true
+                }
+            }
+        })
+        app.mount("#app")
+    </script>
+</body>
+</html>

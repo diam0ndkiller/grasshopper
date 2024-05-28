@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .box {
+            width: 400px;
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <div id="app">
+        <img src="https://picsum.photos/400/400">
+        <p>
+            {{ "Moose count: " + count }}
+        </p>
+        <button @:click="count++">Count moose</button>
+        <input @:input="inpCount++">
+        <p>{{ 'Input events occured: ' + inpCount }}</p>
+        <p>Move the mouse pointer over the box below</p>
+        <div class="box" @:mousemove="colorVal=Math.floor(Math.random()*360)"
+             v-bind:style="{backgroundColor:'hsl('+colorVal+',80%,80%)'}">
+        </div>
+    </div>
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    count: 0,
+                    inpCount: 0,
+                    colorVal: 0,
+                }
+            }
+        })
+        app.mount("#app")
+    </script>
+</body>
+</html>
