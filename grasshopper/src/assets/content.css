@@ -34,7 +34,7 @@ main.content {
 
     div.content__header__grid {
         display: grid;
-        grid-template-columns: 50px 50px 1fr;
+        grid-template-columns: 50px 50px 1fr 50px;
     }
 }
 
@@ -45,6 +45,6 @@ main.content {
 
     div.content__header__grid {
         display: grid;
-        grid-template-columns: 50px 1fr;
+        grid-template-columns: 50px 1fr 50px;
     }
 }

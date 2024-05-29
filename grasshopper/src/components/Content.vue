@@ -12,7 +12,7 @@ defineProps({
         <div class="inline content__header content__header__grid">
             <span class="hiddenWhenBig">
                 <v-btn
-                    @click="navigation__expanded__click()"
+                    @click="navigation__expanded__click"
                     color="#222222"
                     icon="mdi-menu"
                 ></v-btn>
@@ -22,6 +22,13 @@ defineProps({
             </span>
             <span class="content__header">
                 <h1 class="inline">{{ o.name }}</h1>
+            </span>
+            <span>
+                <v-btn
+                    @click="chat__options__click"
+                    color="#222222"
+                    icon="mdi-dots-vertical"
+                ></v-btn>
             </span>
         </div>
     </div>
@@ -39,10 +46,13 @@ export default {
     watch: {
         
     },
-    emits: ['navigation-expanded-click'],
+    emits: ['navigation-expanded-click','chat-options-click'],
     methods: {
         navigation__expanded__click() {
             this.$emit('navigation-expanded-click');
+        },
+        chat__options__click() {
+            this.$emit('chat-options-click');
         }
     }
 }

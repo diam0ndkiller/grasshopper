@@ -1,6 +1,7 @@
 export class FakeBackend {
     static getChats() {
         let chats = {};
+        chats['-1'] = {id: '-1', name: 'welcome'}
         chats['0'] = {id: '0', name: 'internal'};
         for (let chatID = 1; chatID < 100; chatID++) {
             chats[""+chatID] = {id: ""+chatID, name: "demo chat id="+chatID, imgSrc: "/assets/chat/"+chatID+".png"};

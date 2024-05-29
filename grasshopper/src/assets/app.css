@@ -4,7 +4,12 @@ body {
   display: flex;
 }
 
+.inline {
+    display: inline;
+}
+
 #app {
+  display: grid;
   width: 100vw;
   margin: 0 0;
   padding: 0;
@@ -14,14 +19,11 @@ body {
   #app {
     
   }
+
   .hiddenWhenSmall {
     display: none;
     visibility: hidden;
   }
-}
-
-.inline {
-    display: inline;
 }
 
 @media (min-width: 1024px) {

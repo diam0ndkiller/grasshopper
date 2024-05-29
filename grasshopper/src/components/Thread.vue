@@ -13,7 +13,7 @@ defineProps({
 
 <template>
     <div class="d-flex navigation__item navigation__thread">
-        <button @click="thread__click" class="navigation__item navigation__thread flex-grow-1" v-bind:class="{'active_thread': active_thread}">
+        <button @click="chat__click" class="navigation__item navigation__thread flex-grow-1" v-bind:class="{'active_thread': active_thread}">
             <span class="navigation__item navigation__thread logo__thread">
                 <img class="logo__thread" v-bind:src="o.imgSrc"/>
             </span>
@@ -22,6 +22,9 @@ defineProps({
                 <p class="heading__thread">{{ o.id }}</p>
             </span>
         </button>
+        <span class="inline navigation__item navigation__thread navigation__thread__options">
+            <v-btn class="inline navigation__item" :color="'#282828'" icon="mdi-dots-vertical" @click="option__click"></v-btn>
+        </span>
     </div>
 </template>
 
@@ -32,18 +35,22 @@ export default {
             
         }
     },
-    emits: ['navigation-thread-click'],
+    emits: ['navigation-chat-click','chat-options-click'],
     computed: {
-        id() {
-            return this.o.id
+        color() {
+            if (this.active_thread) return "#007f7f";
+            else return "#282828";
         }
     },
     watch: {
         
     },
     methods: {
-        thread__click() {
-            this.$emit('navigation-thread-click', this.o);
+        chat__click() {
+            this.$emit('navigation-chat-click', this.o);
+        },
+        option__click() {
+            this.$emit('chat-options-click', this.o);
         }
     }
 }
