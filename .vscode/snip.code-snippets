@@ -16,17 +16,31 @@
 	// 	"description": "Log output to console"
 	// }
 	"Import Vue": {
-		"prefix": "vue",
+		"prefix": "vue-import",
 		"body": [
 			"<script src=\"https://unpkg.com/vue@3/dist/vue.global.js\"></script>\n<div id=\"app\">\n\t\n</div>"
 		],
 		"description": "Import the vue global script"
 	},
-	"Vue App Setup": {
-		"prefix": "app",
+	"Vue Default Export Setup": {
+		"prefix": "export",
 		"body": [
-			"const app = Vue.createApp({\n\ttemplate: \n\t\t\n\t,\n\tdata() {\n\t\treturn {\n\t\t\t\n\t\t}\n\t},\n\tcomputed: {\n\t\t\n\t},\n\twatch: {\n\t\t\n\t},\n\tmethods: {\n\t\t\n\t}\n});\napp.mount(\"#app\");"
+			"export default {\n\tdata() {\n\t\treturn {\n\t\t\t\n\t\t}\n\t},\n\tcomputed: {\n\t\t\n\t},\n\twatch: {\n\t\t\n\t},\n\tmethods: {\n\t\t\n\t}\n}"
 		],
 		"description": "Create a vue app"
+	},
+	"Vue Component Define Props": {
+		"prefix": "props",
+		"body": [
+			"defineProps({\n})"
+		],
+		"description": "Define Vue Component Props"
+	},
+	"Vue Base": {
+		"prefix": "vue",
+		"body": [
+			"<script setup>\n\n</script>\n\n<template>\n\n</template>\n\n<script>\n\n</script>\n\n<style>\n\n</style>"
+		],
+		"description": "Paste Vue Base Structure"
 	}
 }

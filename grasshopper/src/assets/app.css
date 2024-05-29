@@ -1,23 +1,41 @@
+body {
+  max-height: 100vh;
+  overflow: hidden;
+  display: flex;
+}
+
 #app {
-  margin: 0 auto;
-  padding: 2rem;
+  width: 100vw;
+  margin: 0 0;
+  padding: 0;
 }
 
 @media (max-width: 1023px) {
   #app {
     
   }
+  .hiddenWhenSmall {
+    display: none;
+    visibility: hidden;
+  }
+}
+
+.inline {
+    display: inline;
 }
 
 @media (min-width: 1024px) {
   body {
-    display: flex;
   }
 
   #app {
     position: relative;
     display: grid;
     grid-template-columns: 1fr 4fr;
-    padding: 0 2rem;
+    padding: 0 0;
+  }
+  .hiddenWhenBig {
+      display: none;
+      visibility: hidden;
   }
 }

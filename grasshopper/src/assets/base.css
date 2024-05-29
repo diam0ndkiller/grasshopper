@@ -6,8 +6,8 @@ body {
   background-color: #323232;
   color: #dddddd;
   transition:
-    color 0.5s,
-    background-color 0.5s;
+    color 0.2s,
+    background-color 0.2s;
   line-height: 1.6;
   font-family:
     Inter,

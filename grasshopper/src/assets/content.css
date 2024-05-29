@@ -1,16 +1,50 @@
-main.content {
+div.content {
+    display: grid;
+    grid-template-rows: 50px 1fr;
+}
 
+img.content__header__logo {
+    width: 40px;
+    height: 40px;
+    margin: 5px;
+}
+
+div.content__header {
+    max-height: 50px;
+    background-color: #222222;
+}
+
+span.content__header {
+    display: inline;
+    vertical-align: middle;
+}
+
+.inline {
+    vertical-align: middle;
+}
+
+main.content {
+    display: flex;
 }
 
 @media (max-width: 1023px) {
     main.content {
+        width: 100vw;
     }
-    .hidden {
-        visibility: hidden;
+
+    div.content__header__grid {
+        display: grid;
+        grid-template-columns: 50px 50px 1fr;
     }
 }
 
 @media (min-width: 1024px) {
     main.content {
+        width: 80vw;
+    }
+
+    div.content__header__grid {
+        display: grid;
+        grid-template-columns: 50px 1fr;
     }
 }

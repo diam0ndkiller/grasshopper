@@ -1,10 +1,78 @@
 nav.navigation {
     vertical-align: top;
-    text-align: center;
+    text-align: left;
+    overflow: scroll;
+}
+
+span.navigation__header {
+    vertical-align: center;
+    padding: 2px;
+}
+
+div.navigation__header {
+    vertical-align: center;
+    position: fixed;
+    width: 100%;
+    background-color: #222222;
+    display: flex;
+}
+
+@media (min-width: 1024px) {
+    div.navigation__header {
+        width: 20%;
+    }
 }
 
 .logo {
-    width: 10%;
+    width: 40px;
+    height: 40px;
+}
+
+button.navigation__thread {
+    display: flex;
+    background-color: #111111;
+    margin: 5px;
+    padding: 5px;
+    align-items: start;
+    border-radius: 10px;
+    border: none;
+    transition:
+     background-color 0.1s;
+}
+
+div.navigation__threads {
+    margin-top: 50px;
+    background-color: #282828;
+}
+
+button.navigation__thread:hover {
+    background-color: #484848;
+    transition:
+     background-color 0.1s;
+}
+
+button.navigation__thread.active_thread {
+    background-color: #007f7f;
+    transition:
+     background-color 0.1s;
+}
+
+.logo__thread {
+    margin: 0 5px 0 0;
+}
+
+img.logo__thread {
+    width: 50px;
+}
+
+div.navigation__thread {
+    display: grid;
+    grid-template-columns: 1fr 4fr;
+    vertical-align: top;
+}
+
+span.navigation__item {
+    text-align: left;
 }
 
 @media (max-width: 1023px) {
