@@ -76,7 +76,7 @@ export default {
       },
       openChat() {
         this.showChatOptions = false;
-        this.o = this.chatForOptions;
+        this.navigation__chat__click(this.chatForOptions)
       },
       deleteChat() {
 
