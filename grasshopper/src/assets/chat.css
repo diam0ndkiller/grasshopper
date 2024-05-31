@@ -1,0 +1,18 @@
+div.chat {
+
+}
+
+div.message {
+    margin: 10px;
+    border-radius: 4px;
+    border: none;
+    background-color: #282828;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 60px 1fr;
+}
+
+img.message__icon {
+    width: 40px;
+    height: 40px;
+}

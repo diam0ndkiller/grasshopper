@@ -1,5 +1,6 @@
 <script setup>
 import { FakeBackend } from '@/scripts/fake-backend';
+//import { SQLBackend } from '@/scripts/sql-backend';
 import Thread from './Thread.vue'
 defineProps({
     current_chat_id: {
@@ -7,6 +8,9 @@ defineProps({
         default: null
     }
 })
+let res = await fetch("http://localhost:3000/api/chats/0")
+let chats = res.json().value;
+console.log(chats);
 </script>
 
 <template>
@@ -28,9 +32,12 @@ defineProps({
         </div>
     </div>
     <div class="navigation__threads__wrapper">
-        <div class="navigation__threads">
-            <Thread @navigation-chat-click="navigation__chat__click" @chat-options-click="chat__options__click" v-for="x in Object.keys(chats)" :o='chats[x]' :active_thread="x == current_chat_id"/>
-        </div>
+        <v-virtual-scroll class="navigation__threads" :items="chats" style="height: calc(100vh - 50px);">
+            <template v-slot:default="{ item }">
+                {{ item }}
+                <Thread @navigation-chat-click="navigation__chat__click" @chat-options-click="chat__options__click" v-bind:o='item' v-bind:active_thread="item.id == current_chat_id"/>
+            </template>
+        </v-virtual-scroll>
     </div>
 </template>
 
@@ -38,7 +45,6 @@ defineProps({
 export default {
     data() {
         return {
-            chats: FakeBackend.getChats()
         }
     },
     emits: ['navigation-chat-click','chat-options-click'],

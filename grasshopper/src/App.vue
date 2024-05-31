@@ -5,7 +5,9 @@ import Content from './components/Content.vue'
 
 <template>
   <nav class="navigation" v-bind:class="{hiddenWhenSmall: !navigation__expanded}">
-    <Navigation v-bind:current_chat_id="o.id" @navigation-chat-click="navigation__chat__click" @chat-options-click="chat__options__click"/>
+    <Suspense>
+      <Navigation v-bind:current_chat_id="o.id" @navigation-chat-click="navigation__chat__click" @chat-options-click="chat__options__click"/>
+    </Suspense>
   </nav>
   
   <main class="content" v-bind:class="{hiddenWhenSmall: navigation__expanded}">

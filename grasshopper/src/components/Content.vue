@@ -1,4 +1,5 @@
 <script setup>
+import Chat from '@/components/Chat.vue'
 defineProps({
     o: {
         type: Object,
@@ -30,6 +31,9 @@ defineProps({
                     icon="mdi-dots-vertical"
                 ></v-btn>
             </span>
+        </div>
+        <div class="chat">
+            <Chat :o="o"/>
         </div>
     </div>
 </template>
