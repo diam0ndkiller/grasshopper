@@ -1,21 +1,25 @@
 <script setup>
+import { Backend } from '@/scripts/backend';
+import { format } from 'date-fns'
+
 defineProps({
     message: {
         type: Object,
         required: true
     }
 })
+
 </script>
 
 <template>
     <div class="message">
-        <div class="inline message__icon">
-            <img :src="message.author.imgSrc" class="message__icon">
+        <div v-if="author != undefined" class="inline message__icon">
+            <img :src="author.imgSrc" class="message__icon">
         </div>
         <div class="inline message__text">
-            <div class="message__author">
+            <div v-if="author != undefined" class="message__author">
                 <p>
-                    {{ message.author.name }}
+                    <b>{{ author.name }}</b> [{{ format(timestamp, "MM/dd/yyyy @ HH:mm") }}]
                 </p>
             </div>
             <div class="message__content">
@@ -31,11 +35,18 @@ defineProps({
 export default {
     data() {
         return {
-            
+            author: undefined
         }
     },
+    async mounted() {
+        let data = await Backend.getUserById(this.message.author_id);
+        data = {...data};
+        this.author = data.user;
+    },
     computed: {
-        
+        timestamp() {
+            return Date.parse(this.message.timestamp);
+        }
     },
     watch: {
         

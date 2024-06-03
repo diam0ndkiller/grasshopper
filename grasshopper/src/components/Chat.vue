@@ -1,6 +1,7 @@
 <script setup>
-import { FakeBackend } from '@/scripts/fake-backend';
 import Message from '@/components/Message.vue';
+import { Backend } from '@/scripts/backend';
+import { format } from 'date-fns';
 defineProps({
     o: {
         type: Object,
@@ -10,9 +11,11 @@ defineProps({
 </script>
 
 <template>
-  <v-infinite-scroll side="start" @load="load" style="height: calc(100vh - 50px);">
+  <v-infinite-scroll v-if="chat != undefined" side="start" @load="load" style="height: calc(100vh - 50px); z-index: -1; justify-content: flex-end; flex-direction: column;">
     <template v-for="(item, index) in messages" :key="item">
-      <Message :message="item"/>
+      <Suspense>
+        <Message :message="item"/>
+      </Suspense>
     </template>
   </v-infinite-scroll>
 </template>
@@ -21,43 +24,52 @@ defineProps({
 export default {
     data() {
         return {
-            chat: FakeBackend.getChatById(this.o.id),
+            chat: undefined,
             messages: [],
             savestates: {},
             chatId: this.o.id,
-            currentIndex: 0,
+            lastTimestamp: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
             messageLoadCount: 10,
             reachedChatEnd: false
         }
+    },
+    async mounted() {
+        let data = await Backend.getChatById(this.o.id);
+        data = {...data};
+        this.chat = data.chat;
     },
     computed: {
         
     },
     watch: {
-        o: function(o) {
-            this.chat = FakeBackend.getChatById(this.o.id);
+        o: async function(o) {
+            let data = await Backend.getChatById(this.o.id);
+            data = {...data};
+            this.chat = data.chat;
             this.savestates[this.chatId] = {
                 messages: [...this.messages],
-                currentIndex: this.currentIndex
+                lastTimestamp: this.lastTimestamp
             };
             this.chatId = this.o.id;
             if (this.savestates.hasOwnProperty(this.chatId)) {
                 this.messages = this.savestates[this.chatId].messages;
-                this.currentIndex = this.savestates[this.chatId].currentIndex;
+                this.lastTimestamp = this.savestates[this.chatId].lastTimestamp;
             }
             else {
                 this.messages = [];
-                this.currentIndex = 0;
+                this.lastTimestamp = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
             }
             this.reachedChatEnd = false;
         }
     },
     methods: {
-        load ({ done }) {
-            setTimeout(() => {
+        async load ({ done }) {
+            setTimeout(async () => {
                 if (this.reachedChatEnd) return done('ok');
-                let newMessages = FakeBackend.getMessagesByChatId(this.chat.id, this.currentIndex, 10);
-                this.currentIndex += newMessages.length;
+                let data = await Backend.getMessagesByChatId(this.chat.id, this.lastTimestamp, this.messageLoadCount);
+                data = {...data};
+                let newMessages = data.messages;
+                if (newMessages.length > 0) this.lastTimestamp = newMessages[0].timestamp;
                 this.messages.unshift(...newMessages);
                 if (newMessages.length < this.messageLoadCount) this.reachedChatEnd = true;
                 done('ok');
