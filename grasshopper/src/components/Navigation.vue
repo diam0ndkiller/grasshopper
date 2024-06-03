@@ -6,6 +6,10 @@ defineProps({
     current_chat_id: {
         type: Number,
         default: null
+    },
+    notifications: {
+        type: Object,
+        default: {}
     }
 })
 let chatlist = await Backend.getChats();
@@ -34,7 +38,7 @@ let chats = chatlist.chats;
     <div class="navigation__threads__wrapper">
         <v-virtual-scroll class="navigation__threads" :items="chats" style="height: calc(100vh - 50px);">
             <template v-slot:default="{ item }">
-                <Thread @navigation-chat-click="navigation__chat__click" @chat-options-click="chat__options__click" v-bind:o='item' v-bind:active_thread="item.id == current_chat_id"/>
+                <Thread :notifications="notifications[item.id]" @navigation-chat-click="navigation__chat__click" @chat-options-click="chat__options__click" v-bind:o='item' v-bind:active_thread="item.id == current_chat_id"/>
             </template>
         </v-virtual-scroll>
     </div>
@@ -47,6 +51,8 @@ export default {
         }
     },
     emits: ['navigation-chat-click','chat-options-click'],
+    async mounted() {
+    },
     methods: {
         navigation__chat__click(o) {
             this.$emit('navigation-chat-click', o);

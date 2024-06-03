@@ -80,6 +80,11 @@ button.navigation__thread.active_thread {
      background-color 0.1s;
 }
 
+button.navigation__thread.notification_thread {
+    color: #c00;
+    font-style: italic;
+}
+
 span.navigation__thread__options {
     margin: auto 0;
 }

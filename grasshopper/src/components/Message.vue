@@ -19,7 +19,7 @@ defineProps({
         <div class="inline message__text">
             <div v-if="author != undefined" class="message__author">
                 <p>
-                    <b>{{ author.name }}</b> [{{ format(timestamp, "MM/dd/yyyy @ HH:mm") }}]
+                    <b>{{ author.name }}</b> [{{ format(message.timestamp * 1000, "MM/dd/yyyy @ HH:mm") }}]
                 </p>
             </div>
             <div class="message__content">
@@ -44,9 +44,6 @@ export default {
         this.author = data.user;
     },
     computed: {
-        timestamp() {
-            return Date.parse(this.message.timestamp);
-        }
     },
     watch: {
         

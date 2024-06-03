@@ -4,6 +4,10 @@ defineProps({
     o: {
         type: Object,
         required: true
+    },
+    current_notifications: {
+        type: Array,
+        default: []
     }
 })
 </script>
@@ -33,7 +37,7 @@ defineProps({
             </span>
         </div>
         <div class="chat">
-            <Chat :o="o"/>
+            <Chat :current_notifications="current_notifications" :o="o"/>
         </div>
     </div>
 </template>

@@ -13,12 +13,12 @@ const sslCertNote = "After you accept, please reload this page.";
 <template>
   <nav class="navigation" v-if="pingSuccessful" v-bind:class="{hiddenWhenSmall: !navigation__expanded}">
     <Suspense>
-      <Navigation v-bind:current_chat_id="o.id" @navigation-chat-click="navigation__chat__click" @chat-options-click="chat__options__click"/>
+      <Navigation :notifications="notifications" :current_chat_id="o.id" @navigation-chat-click="navigation__chat__click" @chat-options-click="chat__options__click"/>
     </Suspense>
   </nav>
   
   <main class="content" v-if="pingSuccessful" v-bind:class="{hiddenWhenSmall: navigation__expanded}">
-    <Content v-bind:o="o" @navigation-expanded-click="navigation__expand__click" @chat-options-click="chat__options__current__click"/>
+    <Content :current_notifications="notifications[o.id]" :o="o" @navigation-expanded-click="navigation__expand__click" @chat-options-click="chat__options__current__click"/>
   </main>
 
   <v-dialog v-if="pingSuccessful" v-model="showChatOptions">
@@ -74,7 +74,9 @@ export default {
             showChatOptions: false,
             showMessageOptions: false,
             showParticipantOptions: false,
-            pingSuccessful: false
+            pingSuccessful: false,
+            notifications: {},
+            newestNotificationTimestamp: Math.floor(Date.now() / 1000)
         }
     },
     computed: {
@@ -89,6 +91,7 @@ export default {
         console.log("login:", login);
         this.pingSuccessful = pingSuccessful;
       }
+      setInterval(this.getNewNotifications, 1000)
     },
     methods: {
       navigation__chat__click(o) {
@@ -119,6 +122,14 @@ export default {
       },
       deleteChat() {
 
+      },
+      async getNewNotifications() {
+        let data = await Backend.getNewNotifications(this.newestNotificationTimestamp);
+        data.notifications.forEach(element => {
+          if (element.chat_id in this.notifications) this.notifications[element.chat_id].push(element);
+          else this.notifications[element.chat_id] = [element];
+        });
+        this.newestNotificationTimestamp = Math.floor(Date.now() / 1000);
       }
     }
 }

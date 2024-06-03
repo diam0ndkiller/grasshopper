@@ -7,13 +7,17 @@ defineProps({
   active_thread: {
     type: Boolean,
     default: false
+  },
+  notifications: {
+    type: Array,
+    default: []
   }
 })
 </script>
 
 <template>
     <div class="d-flex navigation__item navigation__thread">
-        <button @click="chat__click" class="navigation__item navigation__thread flex-grow-1" v-bind:class="{'active_thread': active_thread}">
+        <button @click="chat__click" class="navigation__item navigation__thread flex-grow-1" v-bind:class="{'active_thread': active_thread, 'notification_thread': notifications.length > 0}">
             <span class="navigation__item navigation__thread logo__thread">
                 <img class="logo__thread" v-bind:src="o.imgSrc"/>
             </span>

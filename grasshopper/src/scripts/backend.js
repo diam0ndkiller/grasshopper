@@ -1,8 +1,9 @@
 export class Backend {
-    static chatMessages = {};
-    static chatMessagesById = {};
+    static users = {};
+    static chats = {};
 
     static api_path = 'https://localhost:3000/api/';
+    static user_id = 0;
     static token = '';
 
     static async ping() {
@@ -68,6 +69,7 @@ export class Backend {
     
             const data = await response.json();
             this.token = data.token;
+            this.user_id = data.user_id;
             return data;
         } catch (error) {
             console.error('Login error:', error);
@@ -138,15 +140,9 @@ export class Backend {
         }
     }
 
-    static getMessageById(chatID, messageID) {
-        let message = {id: messageID, chatID: chatID};
-        message.content = "demo message id="+messageID;
-        message.reactions = {"✅": [this.getParticipantById('-1')]};
-        message.author = this.getParticipantById(chatID);
-        return message;
-    }
-
     static async getUserById(userID) {
+        if (this.users[""+userID] != undefined) return this.users[""+userID];
+        //console.log(this.users, this.users[""+userID]);
         try {
             const response = await fetch(this.api_path+'user/'+userID, {
                 headers: {
@@ -160,10 +156,80 @@ export class Backend {
             }
     
             const data = await response.json();
+            this.users[""+data.user.id] = data;
             return data;
         } catch (error) {
             console.error('Error getting user '+userID+':', error);
             throw new Error('Getting user failed');
+        }
+    }
+
+    static async sendMessage(chat_id, author_id, content) {
+        let body = JSON.stringify({chat_id, author_id, content});
+        console.log(body);
+        try {
+            const response = await fetch(this.api_path+'send-message/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: body,
+                cache: "no-store"
+            });
+    
+            if (!response.ok) {
+                throw new Error('Writing message failed');
+            }
+    
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error writing message:', error);
+            throw new Error('Writing message failed');
+        }
+    }
+
+    static async getChatUpdates(chatID, newest_timestamp) {
+        try {
+            const response = await fetch(this.api_path+'chat-updates/'+chatID+'/'+newest_timestamp, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                },
+                cache: "no-store"
+            });
+    
+            if (!response.ok) {
+                throw new Error('Getting chat updates failed');
+            }
+    
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error getting chat updates in '+chatID+':', error);
+            throw new Error('Getting chat updates failed');
+        }
+    }
+
+    static async getNewNotifications(newest_timestamp) {
+        try {
+            const response = await fetch(this.api_path+'new-notifications/'+newest_timestamp, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                },
+                cache: "no-store"
+            });
+    
+            if (!response.ok) {
+                throw new Error('Getting new notifications failed');
+            }
+    
+            const data = await response.json();
+            console.log(data);
+            return data;
+        } catch (error) {
+            console.error('Error getting new notifications:' + error);
+            throw new Error('Getting new notifications failed');
         }
     }
 }
