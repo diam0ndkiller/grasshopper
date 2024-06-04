@@ -5,49 +5,50 @@ nav.navigation {
     overflow: scroll;
 }
 
-span.navigation__header {
+div.navigation__header__item {
     vertical-align: center;
-    padding: 2px;
+    padding: 5px;
 }
 
 div.navigation__header {
     vertical-align: center;
     position: fixed;
-    width: 100vw;
     background-color: #222222;
     display: flex;
     z-index: 1;
+    max-height: 58px;
 }
 
-@media (min-width: 1024px) {
-}
-
-@media (max-width: 1023px) {
+@media (max-width: 1199px) {
     div.navigation__header__grid {
         display: grid;
-        grid-template-columns: 50px 50px 1fr;
+        grid-template-columns: 58px 58px 1fr;
+    }
+
+    div.navigation__header {
+        width: 100vw;
     }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1200px) {
     div.navigation__header {
         width: 20vw;
     }
 
     div.navigation__header__grid {
         display: grid;
-        grid-template-columns: 50px 1fr;
+        grid-template-columns: 58px 1fr;
     }
 }
 
 .logo {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
 }
 
 div.navigation__threads__wrapper {
-    margin-top: 50px;
-    max-height: clac(100vh - 50px);
+    margin-top: 58px;
+    max-height: clac(100vh - 58px);
 }
 
 div.navigation__threads {
@@ -94,7 +95,7 @@ span.navigation__thread__options {
 }
 
 img.logo__thread {
-    width: 50px;
+    width: 48px;
 }
 
 div.navigation__thread {
@@ -108,14 +109,14 @@ span.navigation__item {
     vertical-align: center;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1199px) {
     nav.navigation {
         width: 100vw;
         position: fixed;
     }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1200px) {
     nav.navigation {
         max-width: 20vw;
     }

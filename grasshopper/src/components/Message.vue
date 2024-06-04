@@ -1,5 +1,6 @@
 <script setup>
 import { Backend } from '@/scripts/backend';
+import { long_time, short_time } from '@/scripts/functions';
 import { format } from 'date-fns'
 
 defineProps({
@@ -12,14 +13,14 @@ defineProps({
 </script>
 
 <template>
-    <div class="message">
+    <div class="message" :id="'message-'+message.id">
         <div v-if="author != undefined" class="inline message__icon">
-            <img :src="author.imgSrc" class="message__icon">
+            <img :src="author.image" class="message__icon">
         </div>
         <div class="inline message__text">
             <div v-if="author != undefined" class="message__author">
                 <p>
-                    <b>{{ author.name }}</b> [{{ format(message.timestamp * 1000, "MM/dd/yyyy @ HH:mm") }}]
+                    <b>{{ author.name }}</b> [{{ long_time(message.timestamp) }}]
                 </p>
             </div>
             <div class="message__content">

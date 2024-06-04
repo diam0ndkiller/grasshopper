@@ -22,7 +22,6 @@ defineProps({
             </Suspense>
         </template>
         <template v-slot:loading>
-            (Loading Messages)
         </template>
     </v-infinite-scroll>
 </template>
@@ -36,6 +35,7 @@ export default {
             savestates: {},
             chatId: this.o.id,
             lastTimestamp: Math.floor(Date.now() / 1000),
+            lastEditedTimestamp: Math.floor(Date.now() / 1000),
             messageLoadCount: 10,
             reachedChatEnd: false,
             notificationReceived: true
@@ -45,6 +45,7 @@ export default {
         let data = await Backend.getChatById(this.o.id);
         data = {...data};
         this.chat = data.chat;
+        setInterval(this.getEditedMessages, 5000);
     },
     computed: {
         newestTimestamp() {
@@ -59,21 +60,24 @@ export default {
             this.chat = data.chat;
             this.savestates[this.chatId] = {
                 messages: [...this.messages],
-                lastTimestamp: this.lastTimestamp
+                lastTimestamp: this.lastTimestamp,
+                lastEditedTimestamp: this.lastEditedTimestamp
             };
             this.chatId = this.o.id;
             if (this.savestates.hasOwnProperty(this.chatId)) {
                 this.messages = this.savestates[this.chatId].messages;
                 this.lastTimestamp = this.savestates[this.chatId].lastTimestamp;
+                this.lastEditedTimestamp = this.savestates[this.chatId].lastEditedTimestamp;
             }
             else {
                 this.messages = [];
-                this.lastTimestamp = Date.now();
+                this.lastTimestamp = Math.floor(Date.now() / 1000);
+                this.lastEditedTimestamp = Math.floor(Date.now() / 1000);
             }
             this.reachedChatEnd = false;
         },
         current_notifications: function(current_notifications) {
-            this.notificationReceived = true;
+            this.notificationReceived = current_notifications.length > 0;
         }
     },
     methods: {
@@ -102,7 +106,6 @@ export default {
             }
         },
         until(conditionFunction) {
-
             const poll = resolve => {
             if(conditionFunction()) resolve();
             else setTimeout(_ => poll(resolve), 100);
@@ -113,6 +116,23 @@ export default {
         getNewestMessage() {
             let all = document.querySelectorAll(".message");
             return all[all.length - 1];
+        },
+        async getEditedMessages() {
+            let { edited, deleted } = await Backend.getEditedMessages(this.chatId, this.lastEditedTimestamp);
+            this.lastEditedTimestamp = Math.floor(Date.now() / 1000);
+            deleted.forEach(element => {
+                let e = document.getElementById("message-"+element.id);
+                if (e != undefined) {
+                    e.remove();
+                }
+            });
+            edited.forEach(element => {
+                let e = document.getElementById("message-"+element.id);
+                if (e != undefined) {
+                    let content = e.querySelector(".message__content");
+                    content.innerHTML = element.content;
+                }
+            });
         }
     }
 }

@@ -1,4 +1,6 @@
 <script setup>
+import { short_time } from '@/scripts/functions';
+
 defineProps({
   o: {
     type: Object,
@@ -19,11 +21,11 @@ defineProps({
     <div class="d-flex navigation__item navigation__thread">
         <button @click="chat__click" class="navigation__item navigation__thread flex-grow-1" v-bind:class="{'active_thread': active_thread, 'notification_thread': notifications.length > 0}">
             <span class="navigation__item navigation__thread logo__thread">
-                <img class="logo__thread" v-bind:src="o.imgSrc"/>
+                <img class="logo__thread" v-bind:src="o.image"/>
             </span>
             <span class="inline navigation__item navigation__thread">
                 <h3 class="heading__thread">{{ o.name }}</h3>
-                <p class="heading__thread">{{ o.id }}</p>
+                <p class="heading__thread">{{ short_time(o.latest_timestamp) }}:  {{ o.content }}</p>
             </span>
         </button>
         <span class="inline navigation__item navigation__thread navigation__thread__options">

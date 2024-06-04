@@ -8,25 +8,26 @@ const sslCertText = "This service uses an SSL certificate to ensure a secure (ht
 "doesn't accept the certificate by default. Click this link to accept the certificate manually and to ensure a secure connection.\n"+
 "Your browser will probably prompt you with the information that the site is insecure. You will want to click 'Advanced' and 'Accept'.";
 const sslCertNote = "After you accept, please reload this page.";
+const serverDownNote = "If you already accepted the certificate, the service might be down for maintenance. Sorry, please try again later!";
 </script>
 
 <template>
-  <nav class="navigation" v-if="pingSuccessful" v-bind:class="{hiddenWhenSmall: !navigation__expanded}">
+  <nav class="navigation" v-if="ready" v-bind:class="{hiddenWhenSmall: !navigation__expanded}">
     <Suspense>
       <Navigation :notifications="notifications" :current_chat_id="o.id" @navigation-chat-click="navigation__chat__click" @chat-options-click="chat__options__click"/>
     </Suspense>
   </nav>
   
-  <main class="content" v-if="pingSuccessful" v-bind:class="{hiddenWhenSmall: navigation__expanded}">
+  <main class="content" v-if="ready" v-bind:class="{hiddenWhenSmall: navigation__expanded}">
     <Content :current_notifications="notifications[o.id]" :o="o" @navigation-expanded-click="navigation__expand__click" @chat-options-click="chat__options__current__click"/>
   </main>
 
-  <v-dialog v-if="pingSuccessful" v-model="showChatOptions">
+  <v-dialog v-if="ready" v-model="showChatOptions">
     <v-card :title="'Options for Chat \''+chatForOptions.name+'\''">
       <v-card-item>
         <v-row>
           <v-col v-for="(x, index) in chatOptions" :key="index" cols="auto">
-            <v-btn :prepend-icon="x.icon" :color="x.color" @click="x.action">{{ x.text }}</v-btn>
+            <v-btn v-if="x.visible(chatForOptions)" :prepend-icon="x.icon" :color="x.color" @click="x.action">{{ x.text }}</v-btn>
           </v-col>
         </v-row>
       </v-card-item>
@@ -48,6 +49,9 @@ const sslCertNote = "After you accept, please reload this page.";
           </v-col>
         </v-row>
       </v-card-item>
+      <v-card-item>
+        {{ serverDownNote }}
+      </v-card-item>
     </v-card>
   </v-dialog>
 </template>
@@ -57,10 +61,10 @@ export default {
     data() {
         return {
             navigation__expanded: true,
-            o: {id: -1, name: "welcome"},
+            o: undefined,
             chatOptions: [
-              {icon: "mdi-arrow-right", text: "Open", color: "#0c0", action: this.openChat},
-              {icon: "mdi-delete", text: "Delete", color: "#c00", action: this.deleteChat}
+              {icon: "mdi-arrow-expand-left", text: "Leave", color: "#c00", action: this.deleteChat, visible: (o) => (o.id >= 0)},
+              {icon: "mdi-arrow-right", text: "Open", color: "#0c0", action: this.openChat, visible: (o) => true}
             ],
             participantOptions: {
 
@@ -74,29 +78,34 @@ export default {
             showChatOptions: false,
             showMessageOptions: false,
             showParticipantOptions: false,
-            pingSuccessful: false,
+            ready: false,
             notifications: {},
-            newestNotificationTimestamp: Math.floor(Date.now() / 1000)
+            newestNotificationTimestamp: Math.floor(Date.now() / 1000) - 2,
+            pingSuccessful: false
         }
     },
     computed: {
       showCertDialog() {return ! this.pingSuccessful}
     },
     async mounted() {
-      let pingSuccessful = (await Backend.ping()).success == true;
-      if (pingSuccessful) {
+      this.pingSuccessful = (await Backend.ping()).success == true;
+      if (this.pingSuccessful) {
         let register = await Backend.register("diam0ndkiller", "minecraft");
         console.log("register:", register);
         let login = await Backend.login("diam0ndkiller", "minecraft");
         console.log("login:", login);
-        this.pingSuccessful = pingSuccessful;
+        let chat = await Backend.getChatById(-1);
+        chat = {...chat};
+        this.o = chat.chat;
+        setInterval(this.getNewNotifications, 1000)
+        this.ready = true;
       }
-      setInterval(this.getNewNotifications, 1000)
     },
     methods: {
       navigation__chat__click(o) {
         this.o = o;
         this.navigation__expanded = false;
+        console.log(this.o);
       },
       navigation__expand__click() {
         this.navigation__expanded = true;
@@ -129,7 +138,7 @@ export default {
           if (element.chat_id in this.notifications) this.notifications[element.chat_id].push(element);
           else this.notifications[element.chat_id] = [element];
         });
-        this.newestNotificationTimestamp = Math.floor(Date.now() / 1000);
+        this.newestNotificationTimestamp = Math.floor(Date.now() / 1000) - 2;
       }
     }
 }

@@ -232,4 +232,26 @@ export class Backend {
             throw new Error('Getting new notifications failed');
         }
     }
+
+    static async getEditedMessages(chat_id, newest_timestamp) {
+        try {
+            const response = await fetch(this.api_path+'edited-messages/'+chat_id+'/'+newest_timestamp, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                },
+                cache: "no-store"
+            });
+    
+            if (!response.ok) {
+                throw new Error('Getting edited messages failed');
+            }
+    
+            const data = await response.json();
+            console.log(data);
+            return data;
+        } catch (error) {
+            console.error('Error getting edited messages:' + error);
+            throw new Error('Getting edited messages failed');
+        }
+    }
 }

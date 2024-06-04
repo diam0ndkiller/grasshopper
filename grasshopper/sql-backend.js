@@ -131,7 +131,13 @@ app.get('/api/chatlist/', async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        let rows = await conn.query("SELECT c.* FROM chats c JOIN chats_users cu ON c.id = cu.chat_id WHERE cu.user_id = "+user_id+";");
+        let query = `select c.*, m.content, lm.latest_timestamp from chats as c
+        left join latest_messages as lm on c.id = lm.chat_id
+        join chats_users as cu on c.id = cu.chat_id
+        join messages as m on m.id = lm.latest_message_id
+        where cu.user_id = ? 
+        order by lm.latest_timestamp desc;`;
+        let rows = await conn.query(query, [user_id]);
         console.log("successful.");
         return res.json({success: true, chats: rows});
     } catch (error) {
@@ -195,7 +201,7 @@ app.get('/api/messages/:chat_id/:last_timestamp/:message_count', async (req, res
     let conn;
     try {
         conn = await pool.getConnection();
-        let rows = await conn.query("SELECT * from (select * from messages where chat_id = "+chat_id+" and timestamp < '"+last_timestamp+"' order by timestamp desc limit "+message_count+") as subquery order by timestamp asc;");
+        let rows = await conn.query("SELECT * from (select * from messages where chat_id = "+chat_id+" and deleted = 0 and timestamp < '"+last_timestamp+"' order by timestamp desc limit "+message_count+") as subquery order by timestamp asc;");
         console.log("successful.");
         return res.json({success: true, messages: rows});
     } catch (error) {
@@ -296,7 +302,7 @@ app.get('/api/chat-updates/:chat_id/:newest_timestamp', async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        let rows = await conn.query("SELECT * from messages where chat_id = "+chat_id+" and timestamp > '"+newest_timestamp+"' order by timestamp asc;");
+        let rows = await conn.query("SELECT * from messages where chat_id = "+chat_id+" and deleted = 0 and timestamp > '"+newest_timestamp+"' order by timestamp asc;");
         console.log("successful.");
         return res.json({success: true, messages: rows});
     } catch (error) {
@@ -326,10 +332,41 @@ app.get('/api/new-notifications/:newest_timestamp', async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        let rows = await conn.query("SELECT m.* from messages m join chats_users cu on m.chat_id = cu.chat_id where cu.user_id = ? and timestamp > ? order by timestamp asc;", [user_id, newest_timestamp]);
+        let notifications = await conn.query("SELECT m.* from messages m join chats_users cu on m.chat_id = cu.chat_id where cu.user_id = ? and timestamp > ? order by timestamp asc;", [user_id, newest_timestamp]);
         console.log("successful.");
-        if (rows.length > 0) console.log(rows);
-        return res.json({success: true, notifications: rows});
+        if (notifications.length > 0) console.log(notifications);
+        return res.json({success: true, notifications});
+    } catch (error) {
+        console.error('Error getting notifications:', error);
+        res.status(500).send('Server error');
+    } finally {
+        if (conn) conn.end();
+    }
+})
+
+app.get('/api/edited-messages/:chat_id/:newest_timestamp', async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    const { chat_id, newest_timestamp } = req.params;
+    console.log("accessing edited messages for chat "+chat_id+" with token '"+token+"' newest_timestamp '"+newest_timestamp+"'...");
+
+    if (!token) {
+        console.error('no token provided');
+        return res.json({success: false, message: 'no token provided.'});
+    }
+
+    let user_id = jwt.verify(token, jwt_secret).user_id;
+    if (user_id == undefined) {
+        console.error('token invalid.');
+        return res.json({success: false, message: 'token invalid.'});
+    }
+
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        let deleted = await conn.query("SELECT * from messages where chat_id = ? and deleted = 1 and deleted_at > ? order by deleted_at asc;", [chat_id, newest_timestamp]);
+        let edited = await conn.query("SELECT * from messages where chat_id = ? and edited = 1 and edited_at > ? order by edited_at asc;", [chat_id, newest_timestamp]);
+        console.log("successful.");
+        return res.json({success: true, deleted, edited});
     } catch (error) {
         console.error('Error getting notifications:', error);
         res.status(500).send('Server error');
