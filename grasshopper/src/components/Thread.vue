@@ -11,15 +11,15 @@ defineProps({
     default: false
   },
   notifications: {
-    type: Array,
-    default: []
+    type: Object,
+    default: {}
   }
 })
 </script>
 
 <template>
     <div class="d-flex navigation__item navigation__thread">
-        <button @click="chat__click" class="navigation__item navigation__thread flex-grow-1" v-bind:class="{'active_thread': active_thread, 'notification_thread': notifications.length > 0}">
+        <button @click="chat__click" class="navigation__item navigation__thread flex-grow-1" v-bind:class="{'active_thread': active_thread, 'notification_thread': Object.keys(notifications).length > 0 && !active_thread}">
             <span class="navigation__item navigation__thread logo__thread">
                 <img class="logo__thread" v-bind:src="o.image"/>
             </span>
@@ -43,10 +43,7 @@ export default {
     },
     emits: ['navigation-chat-click','chat-options-click'],
     computed: {
-        color() {
-            if (this.active_thread) return "#007f7f";
-            else return "#282828";
-        }
+
     },
     watch: {
         

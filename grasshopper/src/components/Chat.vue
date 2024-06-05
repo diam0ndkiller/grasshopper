@@ -1,29 +1,32 @@
 <script setup>
 import Message from '@/components/Message.vue';
 import { Backend } from '@/scripts/backend';
-import { format } from 'date-fns';
+import MessageBox from '@/components/MessageBox.vue';
 defineProps({
     o: {
         type: Object,
         required: true
     },
     current_notifications: {
-        type: Array,
-        default: []
+        type: Object,
+        default: {}
     }
 })
 </script>
 
 <template>
-    <v-infinite-scroll v-if="chat != undefined" side="both" class="messages" @load="load" style="height: calc(100vh - 50px);">
-        <template v-for="(item, index) in messages" :key="item">
-            <Suspense>
-                <Message :message="item"/>
-            </Suspense>
-        </template>
-        <template v-slot:loading>
-        </template>
-    </v-infinite-scroll>
+    <div class="chat">
+        <v-infinite-scroll v-if="chat != undefined" side="both" class="messages" @load="load">
+            <template v-for="(item, index) in messages" :key="item">
+                <Suspense>
+                    <Message :message="item"/>
+                </Suspense>
+            </template>
+            <template v-slot:loading>
+            </template>
+        </v-infinite-scroll>
+        <MessageBox :o="chat" v-if="chat != undefined && chat.can_write" />
+    </div>
 </template>
 
 <script>
@@ -51,7 +54,7 @@ export default {
         newestTimestamp() {
             try { return this.messages[this.messages.length - 1].timestamp; }
             catch { return Math.floor(Date.now() / 1000); }
-        }
+        },
     },
     watch: {
         o: async function(o) {
@@ -71,18 +74,23 @@ export default {
             }
             else {
                 this.messages = [];
-                this.lastTimestamp = Math.floor(Date.now() / 1000);
-                this.lastEditedTimestamp = Math.floor(Date.now() / 1000);
+                this.lastTimestamp = Math.floor(Date.now() / 1000) - 2;
+                this.lastEditedTimestamp = Math.floor(Date.now() / 1000) - 2;
             }
             this.reachedChatEnd = false;
+            this.notificationReceived = true;
         },
-        current_notifications: function(current_notifications) {
-            this.notificationReceived = current_notifications.length > 0;
+        current_notifications: {
+            handler: async function(current_notifications) {
+                this.notificationReceived = (Object.keys(current_notifications).length > 0 || this.notificationReceived);
+            },
+            immediate: true, // Optional: If you want to run it immediately when the component is created
+            deep: true // Optional: If you are watching deep changes in the array/object
         }
     },
     methods: {
         async load ({ side, done }) {
-            if (side == "start") {
+            if (side === "start") {
                 setTimeout(async () => {
                     if (this.reachedChatEnd) return done('ok');
                     console.log("loading old messages...")
@@ -94,7 +102,7 @@ export default {
                     if (newMessages.length < this.messageLoadCount) this.reachedChatEnd = true;
                     done('ok');
                 }, 100)
-            } else if (side == "end") {
+            } else if (side === "end") {
                 await this.until(_ => this.notificationReceived);
                 this.notificationReceived = false;
                 console.log("loading message updates...");
@@ -102,8 +110,21 @@ export default {
                 data = {...data};
                 let newMessages = data.messages;
                 this.messages.push(...newMessages);
+                let x = this.getNewestMessage();
+                console.log(x);
                 done('ok');
             }
+        },
+        getNewestMessage() {
+            let all = document.getElementsByClassName("message");
+            console.log("all: ", all);
+            let messages = {...this.messages};
+            console.log(messages);
+            console.log(a);
+            return all[all.length - 1];
+        },
+        messageSent() {
+            this.notificationReceived = true;
         },
         until(conditionFunction) {
             const poll = resolve => {
@@ -113,13 +134,9 @@ export default {
 
             return new Promise(poll);
         },
-        getNewestMessage() {
-            let all = document.querySelectorAll(".message");
-            return all[all.length - 1];
-        },
         async getEditedMessages() {
             let { edited, deleted } = await Backend.getEditedMessages(this.chatId, this.lastEditedTimestamp);
-            this.lastEditedTimestamp = Math.floor(Date.now() / 1000);
+            this.lastEditedTimestamp = Math.floor(Date.now() / 1000) - 2;
             deleted.forEach(element => {
                 let e = document.getElementById("message-"+element.id);
                 if (e != undefined) {

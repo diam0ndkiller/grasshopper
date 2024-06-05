@@ -164,8 +164,8 @@ export class Backend {
         }
     }
 
-    static async sendMessage(chat_id, author_id, content) {
-        let body = JSON.stringify({chat_id, author_id, content});
+    static async sendMessage(chat_id, content) {
+        let body = JSON.stringify({chat_id, author_id: this.user_id, content});
         console.log(body);
         try {
             const response = await fetch(this.api_path+'send-message/', {
@@ -225,7 +225,7 @@ export class Backend {
             }
     
             const data = await response.json();
-            console.log(data);
+            //console.log(data);
             return data;
         } catch (error) {
             console.error('Error getting new notifications:' + error);
@@ -247,7 +247,7 @@ export class Backend {
             }
     
             const data = await response.json();
-            console.log(data);
+            //console.log(data);
             return data;
         } catch (error) {
             console.error('Error getting edited messages:' + error);

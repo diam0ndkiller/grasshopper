@@ -132,9 +132,9 @@ app.get('/api/chatlist/', async (req, res) => {
     try {
         conn = await pool.getConnection();
         let query = `select c.*, m.content, lm.latest_timestamp from chats as c
-        left join latest_messages as lm on c.id = lm.chat_id
         join chats_users as cu on c.id = cu.chat_id
-        join messages as m on m.id = lm.latest_message_id
+        left join latest_messages as lm on c.id = lm.chat_id
+        left join messages as m on m.id = lm.latest_message_id
         where cu.user_id = ? 
         order by lm.latest_timestamp desc;`;
         let rows = await conn.query(query, [user_id]);
@@ -167,7 +167,17 @@ app.get('/api/chat/:chat_id', async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        let rows = await conn.query("SELECT * from chats where id = "+chat_id+";");
+        let rows = await conn.query(`SELECT c.*, 
+        case
+            when c.is_admin_only and u.is_admin then TRUE
+            when c.is_admin_only and not u.is_admin then FALSE
+            when c.is_moderator_only and u.is_moderator then TRUE
+            when c.is_moderator_only and not u.is_moderator then FALSE
+            else FALSE
+        end as can_write
+        from chats as c 
+        join users as u on u.id = ?
+        where c.id = ?;`, [user_id, chat_id]);
         if (rows.length == 0) {
             console.error('invalid chat id.');
             return res.json({success: false, message: 'invalid chat id.'});
@@ -271,6 +281,19 @@ app.post('/api/send-message/', async (req, res) => {
 
     try {
         conn = await pool.getConnection();
+        let user = await conn.query("select * from users where id=?;", [author_id]);
+        let chat = await conn.query("select * from chats where id=?;", [chat_id]);
+
+        if (chat.is_moderator_only && !user.is_moderator) {
+            console.error('trying to write to moderator only chat.');
+            return res.json({success: false, message: 'trying to write to moderator only chat.'});
+        }
+
+        if (chat.is_admin_only && !user.is_admin) {
+            console.error('trying to write to admin only chat.');
+            return res.json({success: false, message: 'trying to write to admin only chat.'});
+        }
+
         let result = await conn.query("insert into messages(id, chat_id, author_id, content) values (?, ?, ?, ?);", [await getNextUniqueId("messages"), chat_id, author_id, content]);
         console.log("successful.");
         let return_res = {affectedRows: result.affectedRows, warningStatus: result.warningStatus};
@@ -332,7 +355,12 @@ app.get('/api/new-notifications/:newest_timestamp', async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        let notifications = await conn.query("SELECT m.* from messages m join chats_users cu on m.chat_id = cu.chat_id where cu.user_id = ? and timestamp > ? order by timestamp asc;", [user_id, newest_timestamp]);
+        let notifications = await conn.query(`SELECT m.*, c.name as chat_name, c.image as chat_image, u.name as user_name from messages m 
+        join chats_users cu on m.chat_id = cu.chat_id 
+        join chats c on m.chat_id = c.id 
+        join users u on m.author_id = u.id
+        where cu.user_id = ? and timestamp > ? 
+        order by timestamp asc;`, [user_id, newest_timestamp]);
         console.log("successful.");
         if (notifications.length > 0) console.log(notifications);
         return res.json({success: true, notifications});

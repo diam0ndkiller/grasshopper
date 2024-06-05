@@ -6,8 +6,8 @@ defineProps({
         required: true
     },
     current_notifications: {
-        type: Array,
-        default: []
+        type: Object,
+        default: {}
     }
 })
 </script>
@@ -36,9 +36,7 @@ defineProps({
                 ></v-btn>
             </div>
         </div>
-        <div class="chat">
-            <Chat :current_notifications="current_notifications" :o="o"/>
-        </div>
+        <Chat :current_notifications="current_notifications" :o="o"/>
     </div>
 </template>
 

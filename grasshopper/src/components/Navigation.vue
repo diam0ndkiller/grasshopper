@@ -24,10 +24,10 @@ defineProps({
                 ></v-btn>
             </div>
             <div class="navigation__header__item">
-                <img class="logo" src="../../public/favicon.png">
+                <img class="logo" src="/assets/grasshopper.png">
             </div>
             <div class="navigation__header__item">
-                <h1 class="inline heading">grasshopper</h1>
+                <h1 class="inline heading">Chats</h1>
             </div>
         </div>
     </div>
@@ -54,11 +54,9 @@ export default {
     },
     methods: {
         navigation__chat__click(o) {
-            console.log(o)
             this.$emit('navigation-chat-click', o);
         },
         navigation__close__click() {
-            console.log(this.chats)
             this.navigation__chat__click(this.chatsById[this.current_chat_id]);
         },
         chat__options__click(o) {
@@ -74,8 +72,13 @@ export default {
         }
     },
     watch: {
-        notifications: async () => {
-            await this.getChats();
+        notifications: {
+            handler: async function(notifications) {
+                console.log("watch -> getChats");
+                await this.getChats();
+            },
+            immediate: true, // Optional: If you want to run it immediately when the component is created
+            deep: true // Optional: If you are watching deep changes in the array/object
         }
     }
 }

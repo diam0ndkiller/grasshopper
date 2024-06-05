@@ -2,6 +2,7 @@
 import Navigation from './components/Navigation.vue';
 import Content from './components/Content.vue';
 import { Backend } from './scripts/backend';
+import { NotificationAPI } from './scripts/notificationAPI';
 const sslCertTitle = "grasshopper API - Accept SSL Certificate";
 const sslCertText = "This service uses an SSL certificate to ensure a secure (https) connection "+
 "to the server. But because I'm no big company, I have to sign the certificate myself. Because of that, your browser "+
@@ -63,7 +64,7 @@ export default {
             navigation__expanded: true,
             o: undefined,
             chatOptions: [
-              {icon: "mdi-arrow-expand-left", text: "Leave", color: "#c00", action: this.deleteChat, visible: (o) => (o.id >= 0)},
+              {icon: "mdi-arrow-expand-left", text: "Leave", color: "#c00", action: this.leaveChat, visible: (o) => (o.id > 0)},
               {icon: "mdi-arrow-right", text: "Open", color: "#0c0", action: this.openChat, visible: (o) => true}
             ],
             participantOptions: {
@@ -81,7 +82,9 @@ export default {
             ready: false,
             notifications: {},
             newestNotificationTimestamp: Math.floor(Date.now() / 1000) - 2,
-            pingSuccessful: false
+            pingSuccessful: false,
+            notificationsInterval: undefined,
+            windowFocus: true
         }
     },
     computed: {
@@ -97,15 +100,27 @@ export default {
         let chat = await Backend.getChatById(-1);
         chat = {...chat};
         this.o = chat.chat;
-        setInterval(this.getNewNotifications, 1000)
+        if (this.notificationsInterval) clearInterval(this.notificationsInterval);
+        this.notificationsInterval = setInterval(this.getNewNotifications, 1000);
+        await NotificationAPI.request();
+        window.onblur = () => {  
+          this.windowFocus=false;
+        }  
+        window.onfocus = () => {  
+          this.windowFocus=true;
+        }
         this.ready = true;
       }
     },
+    watch: {
+    },
     methods: {
       navigation__chat__click(o) {
+        let old_id = this.o.id;
         this.o = o;
         this.navigation__expanded = false;
-        console.log(this.o);
+        this.notifications[old_id] = {};
+        this.notifications[this.o.id] = {};
       },
       navigation__expand__click() {
         this.navigation__expanded = true;
@@ -129,16 +144,26 @@ export default {
         this.showChatOptions = false;
         this.navigation__chat__click(this.chatForOptions)
       },
-      deleteChat() {
+      async leaveChat() {
 
       },
       async getNewNotifications() {
         let data = await Backend.getNewNotifications(this.newestNotificationTimestamp);
-        data.notifications.forEach(element => {
-          if (element.chat_id in this.notifications) this.notifications[element.chat_id].push(element);
-          else this.notifications[element.chat_id] = [element];
-        });
         this.newestNotificationTimestamp = Math.floor(Date.now() / 1000) - 2;
+        data.notifications.forEach(element => {
+          if (!(element.chat_id in this.notifications)) this.notifications[element.chat_id] = {};
+
+          let message_already_received = element.id in this.notifications[element.chat_id];
+          let in_current_chat = element.chat_id == this.o.id;
+
+          console.log("windowfocus: ", this.windowFocus)
+
+          if (!message_already_received && (!in_current_chat || !this.windowFocus)) {
+            NotificationAPI.sendNotification(element.chat_name, element.content, element.chat_image, element.chat_id);
+          }
+
+          this.notifications[element.chat_id][element.id] = element;
+        });
       }
     }
 }
