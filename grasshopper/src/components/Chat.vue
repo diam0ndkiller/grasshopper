@@ -110,18 +110,15 @@ export default {
                 data = {...data};
                 let newMessages = data.messages;
                 this.messages.push(...newMessages);
-                let x = this.getNewestMessage();
-                console.log(x);
                 done('ok');
             }
         },
         getNewestMessage() {
-            let all = document.getElementsByClassName("message");
+            let all = document.querySelector(".message");
             console.log("all: ", all);
-            let messages = {...this.messages};
-            console.log(messages);
-            console.log(a);
-            return all[all.length - 1];
+            let latest = all[all.length - 1];
+            console.log(latest);
+            return latest;
         },
         messageSent() {
             this.notificationReceived = true;
