@@ -52,8 +52,8 @@ export default {
             navigation__expanded: true,
             o: undefined,
             chatOptions: [
-              {icon: "mdi-arrow-expand-left", text: "Leave", color: "#c00", action: this.leaveChat, visible: (o) => (o.id > 0)},
-              {icon: "mdi-arrow-right", text: "Open", color: "#0c0", action: this.openChat, visible: (o) => true}
+              {icon: "mdi-exit-run", text: "Leave", color: "#c00", action: this.leaveChat, visible: (o) => (o.id >= 0)},
+              {icon: "mdi-arrow-right-circle-outline", text: "Open", color: "#0c0", action: this.openChat, visible: (o) => true}
             ],
             participantOptions: {
 

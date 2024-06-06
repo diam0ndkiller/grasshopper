@@ -38,9 +38,9 @@ export default {
         return {
             author: undefined,
             messageOptions: [
-              {icon: "mdi-pencil", text: "Edit", color: "#07f", action: this.editMessage, visible: () => (this.message.author_id === Backend.user_id)},
-              {icon: "mdi-delete", text: "Delete", color: "#f00", action: this.deleteMessage, visible: () => (this.message.author_id === Backend.user_id)},
-              {icon: "mdi-reply", text: "Reply", color: "#0f0", action: this.replyToMessage, visible: () => (this.canWrite)},
+              {icon: "mdi-pencil-outline", text: "Edit", color: "#07f", action: this.editMessage, visible: () => (this.message.author_id === Backend.user_id)},
+              {icon: "mdi-delete-outline", text: "Delete", color: "#f00", action: this.deleteMessage, visible: () => (this.message.author_id === Backend.user_id)},
+              {icon: "mdi-reply-outline", text: "Reply", color: "#0f0", action: this.replyToMessage, visible: () => (this.canWrite)},
               {icon: "mdi-thumbs-up-down-outline", text: "React", color: "#ff0", action: this.showReactionPicker, visible: () => true}
             ],
             reactionPicker: false
