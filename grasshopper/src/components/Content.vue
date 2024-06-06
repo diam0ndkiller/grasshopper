@@ -1,15 +1,6 @@
 <script setup>
 import Chat from '@/components/Chat.vue'
-defineProps({
-    o: {
-        type: Object,
-        required: true
-    },
-    current_notifications: {
-        type: Object,
-        default: {}
-    }
-})
+import OptionsButton from './OptionsButton.vue';
 </script>
 
 <template>
@@ -29,11 +20,7 @@ defineProps({
                 <h1 class="inline heading">{{ o.name }}</h1>
             </div>
             <div class="content__header__item">
-                <v-btn
-                    @click="chat__options__click"
-                    color="#222222"
-                    icon="mdi-dots-vertical"
-                ></v-btn>
+                <OptionsButton :items="chatOptions" color="#222222" :check-item="o" :action-item="o" />
             </div>
         </div>
         <Chat :current_notifications="current_notifications" :o="o"/>
@@ -52,13 +39,24 @@ export default {
     watch: {
         
     },
-    emits: ['navigation-expanded-click','chat-options-click'],
+    props: {
+        o: {
+            type: Object,
+            required: true
+        },
+        current_notifications: {
+            type: Object,
+            default: {}
+        },
+        chatOptions: {
+            type: Array,
+            default: []
+        }
+    },
+    emits: ['navigation-expanded-click'],
     methods: {
         navigation__expanded__click() {
             this.$emit('navigation-expanded-click');
-        },
-        chat__options__click() {
-            this.$emit('chat-options-click');
         }
     }
 }

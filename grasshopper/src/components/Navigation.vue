@@ -1,16 +1,6 @@
 <script setup>
 import { Backend } from '@/scripts/backend';
 import Thread from './Thread.vue'
-defineProps({
-    current_chat_id: {
-        type: Number,
-        default: null
-    },
-    notifications: {
-        type: Object,
-        default: {}
-    }
-})
 </script>
 
 <template>
@@ -34,7 +24,7 @@ defineProps({
     <div class="navigation__threads__wrapper">
         <v-virtual-scroll v-if="chats != undefined" class="navigation__threads" :items="Object.values(chats)" style="height: calc(100vh - 50px);">
             <template v-slot:default="{ item }">
-                <Thread :notifications="notifications[item.id]" @navigation-chat-click="navigation__chat__click" @chat-options-click="chat__options__click" v-bind:o='item' v-bind:active_thread="item.id == current_chat_id"/>
+                <Thread :chatOptions="chatOptions" :notifications="notifications[item.id]" @navigation-chat-click="navigation__chat__click" @chat-options-click="chat__options__click" v-bind:o='item' v-bind:active_thread="item.id == current_chat_id"/>
             </template>
         </v-virtual-scroll>
     </div>
@@ -51,6 +41,20 @@ export default {
     emits: ['navigation-chat-click','chat-options-click'],
     async mounted() {
         await this.getChats();
+    },
+    props: {
+        current_chat_id: {
+            type: Number,
+            default: null
+        },
+        notifications: {
+            type: Object,
+            default: {}
+        },
+        chatOptions: {
+            type: Array,
+            default: []
+        }
     },
     methods: {
         navigation__chat__click(o) {

@@ -5,11 +5,26 @@ div.message {
     background-color: #282828;
     padding: 10px;
     display: grid;
-    grid-template-columns: 60px 1fr;
+    grid-template-columns: 60px 1fr 60px;
+}
+
+div.emoji_picker_dialog {
+    max-height: 400px;
+    max-width: 300px;
 }
 
 div.messages {
     max-height: calc(100vh - 58px - 100px);
+}
+
+div.message_wrapper {
+    display: grid;
+    grid-template-columns: 1fr 60px;
+}
+
+div.message_options_wrapper {
+    display: flex;
+    margin: auto;
 }
 
 img.message__icon {
@@ -18,10 +33,10 @@ img.message__icon {
 }
 
 div.message_box_wrapper {
-    /*position: fixed;*/
+    position: fixed;
     bottom: 0px;
     right: 0px;
-    padding: 20px 20px;
+    padding:0px 20px;
     display: grid;
     grid-template-columns: 1fr 58px;
 }

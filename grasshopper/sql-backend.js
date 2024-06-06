@@ -222,6 +222,36 @@ app.get('/api/messages/:chat_id/:last_timestamp/:message_count', async (req, res
     }
 })
 
+app.get('/api/chat-updates/:chat_id/:newest_timestamp', async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    const { chat_id, newest_timestamp } = req.params;
+    console.log("accessing updates of chat id "+chat_id+" with token '"+token+"' newest_timestamp '"+newest_timestamp+"'...");
+
+    if (!token) {
+        console.error('no token provided');
+        return res.json({success: false, message: 'no token provided.'});
+    }
+
+    let user_id = jwt.verify(token, jwt_secret).user_id;
+    if (user_id == undefined) {
+        console.error('token invalid.');
+        return res.json({success: false, message: 'token invalid.'});
+    }
+
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        let rows = await conn.query("SELECT * from messages where chat_id = "+chat_id+" and deleted = 0 and timestamp > '"+newest_timestamp+"' order by timestamp asc;");
+        console.log("successful.");
+        return res.json({success: true, messages: rows});
+    } catch (error) {
+        console.error('Error getting chats:', error);
+        res.status(500).send('Server error');
+    } finally {
+        if (conn) conn.end();
+    }
+})
+
 app.get('/api/user/:user_id', async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
     const user_id = req.params.user_id;
@@ -250,86 +280,6 @@ app.get('/api/user/:user_id', async (req, res) => {
         return res.json({success: true, user: rows[0]});
     } catch (error) {
         console.error('Error getting user:', error);
-        res.status(500).send('Server error');
-    } finally {
-        if (conn) conn.end();
-    }
-})
-
-app.post('/api/send-message/', async (req, res) => {
-    let { chat_id, author_id, content } = req.body;
-    const token = req.headers.authorization?.split(' ')[1];
-    console.log("writing message '"+content+"' by user "+author_id+" in chat "+chat_id+" with token '"+token+"'...");
-
-    if (!token) {
-        console.error('no token provided');
-        return res.json({success: false, message: 'no token provided.'});
-    }
-
-    let own_user_id = jwt.verify(token, jwt_secret).user_id;
-    if (own_user_id == undefined) {
-        console.error('token invalid.');
-        return res.json({success: false, message: 'token invalid.'});
-    }
-
-    if (own_user_id !== author_id) {
-        console.error('permission for user denied.');
-        return res.json({success: false, message: 'permission for user denied.'});
-    }
-
-    let conn;
-
-    try {
-        conn = await pool.getConnection();
-        let user = await conn.query("select * from users where id=?;", [author_id]);
-        let chat = await conn.query("select * from chats where id=?;", [chat_id]);
-
-        if (chat.is_moderator_only && !user.is_moderator) {
-            console.error('trying to write to moderator only chat.');
-            return res.json({success: false, message: 'trying to write to moderator only chat.'});
-        }
-
-        if (chat.is_admin_only && !user.is_admin) {
-            console.error('trying to write to admin only chat.');
-            return res.json({success: false, message: 'trying to write to admin only chat.'});
-        }
-
-        let result = await conn.query("insert into messages(id, chat_id, author_id, content) values (?, ?, ?, ?);", [await getNextUniqueId("messages"), chat_id, author_id, content]);
-        console.log("successful.");
-        let return_res = {affectedRows: result.affectedRows, warningStatus: result.warningStatus};
-        return res.json({success: true, result: return_res});
-    } catch (error) {
-        console.error('Error writing message:', error);
-        res.status(500).send('Server error');
-    } finally {
-        if (conn) conn.end();
-    }
-})
-
-app.get('/api/chat-updates/:chat_id/:newest_timestamp', async (req, res) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    const { chat_id, newest_timestamp } = req.params;
-    console.log("accessing updates of chat id "+chat_id+" with token '"+token+"' newest_timestamp '"+newest_timestamp+"'...");
-
-    if (!token) {
-        console.error('no token provided');
-        return res.json({success: false, message: 'no token provided.'});
-    }
-
-    let user_id = jwt.verify(token, jwt_secret).user_id;
-    if (user_id == undefined) {
-        console.error('token invalid.');
-        return res.json({success: false, message: 'token invalid.'});
-    }
-
-    let conn;
-    try {
-        conn = await pool.getConnection();
-        let rows = await conn.query("SELECT * from messages where chat_id = "+chat_id+" and deleted = 0 and timestamp > '"+newest_timestamp+"' order by timestamp asc;");
-        console.log("successful.");
-        return res.json({success: true, messages: rows});
-    } catch (error) {
-        console.error('Error getting chats:', error);
         res.status(500).send('Server error');
     } finally {
         if (conn) conn.end();
@@ -407,6 +357,148 @@ app.get('/api/ping/', async (req, res) => {
     console.log("ping: pong");
     let json = {success: true, ping: "pong"};
     res.json(json);
+})
+
+app.post('/api/send-message/', async (req, res) => {
+    let { chat_id, author_id, content } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+    console.log("writing message '"+content+"' by user "+author_id+" in chat "+chat_id+" with token '"+token+"'...");
+
+    if (!token) {
+        console.error('no token provided');
+        return res.json({success: false, message: 'no token provided.'});
+    }
+
+    let own_user_id = jwt.verify(token, jwt_secret).user_id;
+    if (own_user_id == undefined) {
+        console.error('token invalid.');
+        return res.json({success: false, message: 'token invalid.'});
+    }
+
+    if (own_user_id !== author_id) {
+        console.error('permission for user denied.');
+        return res.json({success: false, message: 'permission for user denied.'});
+    }
+
+    let conn;
+
+    try {
+        conn = await pool.getConnection();
+        let user = await conn.query("select * from users where id=?;", [author_id]);
+        let chat = await conn.query("select * from chats where id=?;", [chat_id]);
+
+        if (chat.is_moderator_only && !user.is_moderator) {
+            console.error('trying to write to moderator only chat.');
+            return res.json({success: false, message: 'trying to write to moderator only chat.'});
+        }
+
+        if (chat.is_admin_only && !user.is_admin) {
+            console.error('trying to write to admin only chat.');
+            return res.json({success: false, message: 'trying to write to admin only chat.'});
+        }
+
+        let result = await conn.query("insert into messages(id, chat_id, author_id, content) values (?, ?, ?, ?);", [await getNextUniqueId("messages"), chat_id, author_id, content]);
+        console.log("successful.");
+        let return_res = {affectedRows: result.affectedRows, warningStatus: result.warningStatus};
+        return res.json({success: true, result: return_res});
+    } catch (error) {
+        console.error('Error writing message:', error);
+        res.status(500).send('Server error');
+    } finally {
+        if (conn) conn.end();
+    }
+})
+
+app.post('/api/delete-message/', async (req, res) => {
+    let { message_id } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+    console.log("deleting message "+message_id+" with token '"+token+"'...");
+
+    if (!token) {
+        console.error('no token provided');
+        return res.json({success: false, message: 'no token provided.'});
+    }
+
+    let own_user_id = jwt.verify(token, jwt_secret).user_id;
+    if (own_user_id == undefined) {
+        console.error('token invalid.');
+        return res.json({success: false, message: 'token invalid.'});
+    }
+
+    let conn;
+
+    try {
+        conn = await pool.getConnection();
+        let messages = await conn.query("select * from messages where id=?;", [message_id]);
+        if (messages.length != 1) {
+            console.error('invalid message id.');
+            return res.json({success: false, message: 'invalid message id.'});
+        }
+        let message = messages[0];
+        if (own_user_id != message.author_id) {
+            console.error('permission for user denied.');
+            return res.json({success: false, message: 'permission for user denied.'});
+        }
+
+        let result = await conn.query("update messages set deleted = 1, deleted_at = unix_timestamp() where id = ?;", [message_id]);
+        console.log("successful.");
+        let return_res = {affectedRows: result.affectedRows, warningStatus: result.warningStatus};
+        return res.json({success: true, result: return_res});
+    } catch (error) {
+        console.error('Error deleting message:', error);
+        res.status(500).send('Server error');
+    } finally {
+        if (conn) conn.end();
+    }
+})
+
+app.post('/api/add-reaction/', async (req, res) => {
+    let { message_id, emoji } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+    console.log("adding reaction '"+emoji+"' to message "+message_id+" with token '"+token+"'...");
+
+    if (!token) {
+        console.error('no token provided');
+        return res.json({success: false, message: 'no token provided.'});
+    }
+
+    let own_user_id = jwt.verify(token, jwt_secret).user_id;
+    if (own_user_id == undefined) {
+        console.error('token invalid.');
+        return res.json({success: false, message: 'token invalid.'});
+    }
+
+    let conn;
+
+    try {
+        conn = await pool.getConnection();
+        let messages = await conn.query("select * from messages where id=?;", [message_id]);
+        if (messages.length != 1) {
+            console.error('invalid message id.');
+            return res.json({success: false, message: 'invalid message id.'});
+        }
+        let message = messages[0];
+
+        let reactions = await conn.query("select * from selections where message_id=? and emoji=?;", [message_id, emoji]);
+
+        let result1, reaction_id;
+        if (reactions.length == 0) {
+            reaction_id = getNextUniqueId("reactions");
+            result1 = await conn.query("insert into reactions (id, emoji, message_id) values (?, ?, ?);", [reaction_id, emoji, message_id]);
+        } else {
+            reaction_id = await conn.query("select * from reactions where message_id=? and emoji=?;", [message_id, emoji])
+        }
+        let result2 = await conn.query("insert into reactions_users (reaction_id, user_id) values (?, ?);", [reaction_id, own_user_id]);
+        console.log("successful.");
+        let return_res1 = {affectedRows: result1.affectedRows, warningStatus: result1.warningStatus};
+        let return_res2 = {affectedRows: result2.affectedRows, warningStatus: result2.warningStatus};
+        return res.json({success: true, result1: return_res1, result2: return_res2});
+    } catch (error) {
+        console.error('Error deleting message:', error);
+        res.status(500).send('Server error');
+    } finally {
+        if (conn) conn.end();
+    }
 })
 
 const privateKey = fs.readFileSync('/home/diam0ndkiller/cert/ssl-cert-dia.key', 'utf8');

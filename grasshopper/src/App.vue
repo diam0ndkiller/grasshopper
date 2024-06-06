@@ -15,25 +15,13 @@ const serverDownNote = "If you already accepted the certificate, the service mig
 <template>
   <nav class="navigation" v-if="ready" v-bind:class="{hiddenWhenSmall: !navigation__expanded}">
     <Suspense>
-      <Navigation :notifications="notifications" :current_chat_id="o.id" @navigation-chat-click="navigation__chat__click" @chat-options-click="chat__options__click"/>
+      <Navigation :chatOptions="chatOptions" :notifications="notifications" :current_chat_id="o.id" @navigation-chat-click="navigation__chat__click" />
     </Suspense>
   </nav>
   
   <main class="content" v-if="ready" v-bind:class="{hiddenWhenSmall: navigation__expanded}">
-    <Content :current_notifications="notifications[o.id]" :o="o" @navigation-expanded-click="navigation__expand__click" @chat-options-click="chat__options__current__click"/>
+    <Content :chatOptions="chatOptions" :current_notifications="notifications[o.id]" :o="o" @navigation-expanded-click="navigation__expand__click" />
   </main>
-
-  <v-dialog v-if="ready" v-model="showChatOptions">
-    <v-card :title="'Options for Chat \''+chatForOptions.name+'\''">
-      <v-card-item>
-        <v-row>
-          <v-col v-for="(x, index) in chatOptions" :key="index" cols="auto">
-            <v-btn v-if="x.visible(chatForOptions)" :prepend-icon="x.icon" :color="x.color" @click="x.action">{{ x.text }}</v-btn>
-          </v-col>
-        </v-row>
-      </v-card-item>
-    </v-card>
-  </v-dialog>
 
   <v-dialog v-model="showCertDialog">
     <v-card
@@ -125,13 +113,6 @@ export default {
       navigation__expand__click() {
         this.navigation__expanded = true;
       },
-      chat__options__click(o) {
-        this.chatForOptions = o;
-        this.showChatOptions = true;
-      },
-      chat__options__current__click() {
-        this.chat__options__click(this.o);
-      },
       message__options__click(o) {
         this.messageOptions = o;
         this.showMessageOptions = true;
@@ -140,11 +121,10 @@ export default {
         this.participantOptions = o;
         this.showParticipantOptions = true;
       },
-      openChat() {
-        this.showChatOptions = false;
-        this.navigation__chat__click(this.chatForOptions)
+      openChat(o) {
+        this.navigation__chat__click(o)
       },
-      async leaveChat() {
+      async leaveChat(o) {
 
       },
       async getNewNotifications() {

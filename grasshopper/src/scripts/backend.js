@@ -190,6 +190,32 @@ export class Backend {
         }
     }
 
+    static async deleteMessage(message_id) {
+        let body = JSON.stringify({message_id});
+        console.log(body);
+        try {
+            const response = await fetch(this.api_path+'delete-message/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: body,
+                cache: "no-store"
+            });
+    
+            if (!response.ok) {
+                throw new Error('Deleting message failed');
+            }
+    
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error deleting message:', error);
+            throw new Error('Deleting message failed');
+        }
+    }
+
     static async getChatUpdates(chatID, newest_timestamp) {
         try {
             const response = await fetch(this.api_path+'chat-updates/'+chatID+'/'+newest_timestamp, {

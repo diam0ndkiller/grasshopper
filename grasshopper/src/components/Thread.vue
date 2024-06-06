@@ -1,20 +1,6 @@
 <script setup>
 import { short_time } from '@/scripts/functions';
-
-defineProps({
-  o: {
-    type: Object,
-    required: true
-  },
-  active_thread: {
-    type: Boolean,
-    default: false
-  },
-  notifications: {
-    type: Object,
-    default: {}
-  }
-})
+import OptionsButton from './OptionsButton.vue';
 </script>
 
 <template>
@@ -29,7 +15,7 @@ defineProps({
             </span>
         </button>
         <span class="inline navigation__item navigation__thread navigation__thread__options">
-            <v-btn class="inline navigation__item" :color="'#282828'" icon="mdi-dots-vertical" @click="option__click"></v-btn>
+            <OptionsButton color="#282828" :items="chatOptions" :check-item="o" :action-item="o"/>
         </span>
     </div>
 </template>
@@ -39,6 +25,24 @@ export default {
     data() {
         return {
             
+        }
+    },
+    props: {
+        o: {
+            type: Object,
+            required: true
+        },
+        active_thread: {
+            type: Boolean,
+            default: false
+        },
+        notifications: {
+            type: Object,
+            default: {}
+        },
+        chatOptions: {
+            type: Array,
+            default: []
         }
     },
     emits: ['navigation-chat-click','chat-options-click'],
