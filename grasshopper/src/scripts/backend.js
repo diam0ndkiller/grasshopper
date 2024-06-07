@@ -68,12 +68,64 @@ export class Backend {
             }
     
             const data = await response.json();
-            this.token = data.token;
-            this.user_id = data.user_id;
+            if (data.success) {
+                this.token = data.token;
+                this.user_id = data.user_id;
+            }
             return data;
         } catch (error) {
             console.error('Login error:', error);
             throw new Error('Login failed');
+        }
+    }
+
+    static async changeUsername(new_username) {
+        let body = JSON.stringify({ new_username });
+        try {
+            const response = await fetch(this.api_path+'change_username/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: body,
+                cache: "no-store"
+            });
+    
+            if (!response.ok) {
+                throw new Error('Login failed');
+            }
+    
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Login error:', error);
+            throw new Error('Login failed');
+        }
+    }
+
+    static async updateUserImage(base64Image) {
+        let body = JSON.stringify({ image: base64Image });
+        try {
+            const response = await fetch(this.api_path+'update_user_image/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: body,
+                cache: "no-store"
+            });
+    
+            if (!response.ok) {
+                throw new Error('Updating user image failed');
+            }
+            await this.recacheUser();
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error updating user image:', error);
+            throw new Error('Updating user image failed');
         }
     }
 
@@ -141,14 +193,33 @@ export class Backend {
     }
 
     static async getUserById(userID) {
-        if (this.users[""+userID] != undefined) return this.users[""+userID];
-        //console.log(this.users, this.users[""+userID]);
         try {
             const response = await fetch(this.api_path+'user/'+userID, {
                 headers: {
                     'Authorization': `Bearer ${this.token}`
+                }
+            });
+    
+            if (!response.ok) {
+                throw new Error('Getting user failed');
+            }
+    
+            const data = await response.json();
+            this.users[""+data.user.id] = data;
+            return data;
+        } catch (error) {
+            console.error('Error getting user '+userID+':', error);
+            throw new Error('Getting user failed');
+        }
+    }
+
+    static async recacheUser() {
+        try {
+            const response = await fetch(this.api_path+'user/'+this.user_id, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
                 },
-                cache: "no-store"
+                cache: "reload"
             });
     
             if (!response.ok) {
@@ -213,6 +284,56 @@ export class Backend {
         } catch (error) {
             console.error('Error deleting message:', error);
             throw new Error('Deleting message failed');
+        }
+    }
+
+    static async addReaction(message_id, emoji) {
+        let body = JSON.stringify({message_id, emoji});
+        try {
+            const response = await fetch(this.api_path+'add-reaction/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: body,
+                cache: "no-store"
+            });
+    
+            if (!response.ok) {
+                throw new Error('Adding reaction failed');
+            }
+    
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error adding reaction:', error);
+            throw new Error('Adding reaction failed');
+        }
+    }
+
+    static async removeReaction(reaction_id) {
+        let body = JSON.stringify({reaction_id});
+        try {
+            const response = await fetch(this.api_path+'remove-reaction/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: body,
+                cache: "no-store"
+            });
+    
+            if (!response.ok) {
+                throw new Error('Removing reaction failed');
+            }
+    
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error removing reaction:', error);
+            throw new Error('Removing reaction failed');
         }
     }
 

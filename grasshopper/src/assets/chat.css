@@ -13,6 +13,10 @@ div.emoji_picker_dialog {
     max-width: 300px;
 }
 
+.reaction_chip {
+    margin: 5px;
+}
+
 div.messages {
     max-height: calc(100vh - 58px - 100px);
 }

@@ -1,6 +1,7 @@
 <script setup>
 import { Backend } from '@/scripts/backend';
 import Thread from './Thread.vue'
+import ProfileBanner from './ProfileBanner.vue';
 </script>
 
 <template>
@@ -22,12 +23,13 @@ import Thread from './Thread.vue'
         </div>
     </div>
     <div class="navigation__threads__wrapper">
-        <v-virtual-scroll v-if="chats != undefined" class="navigation__threads" :items="Object.values(chats)" style="height: calc(100vh - 50px);">
+        <v-virtual-scroll v-if="chats != undefined" class="navigation__threads" :items="Object.values(chats)" style="height: calc(100vh - 116px);">
             <template v-slot:default="{ item }">
                 <Thread :chatOptions="chatOptions" :notifications="notifications[item.id]" @navigation-chat-click="navigation__chat__click" @chat-options-click="chat__options__click" v-bind:o='item' v-bind:active_thread="item.id == current_chat_id"/>
             </template>
         </v-virtual-scroll>
     </div>
+    <ProfileBanner/>
 </template>
 
 <script>

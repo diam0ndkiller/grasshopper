@@ -24,6 +24,13 @@ import EmojiPicker from '@/components/EmojiPicker.vue';
                         {{ message.content }}
                     </p>
                 </div>
+                <div class="reactions">
+                    <template v-for="(reaction, key) in reactions">
+                        <v-chip @click="toggleReaction(reaction)" variant="tonal" v-if="reaction.count > 0" :color="(reaction.users.hasOwnProperty(Backend.user_id) ? '#7af' : '#ffffff')" class="reaction_chip">
+                            {{ reaction.emoji+" "+reaction.count }}
+                        </v-chip>
+                    </template>
+                </div>
             </div>
         </div>
         <div class="message_options_wrapper flex-grow-1">
@@ -58,6 +65,10 @@ export default {
         getEditedMessages: {
             type: Function,
             default: () => {}
+        },
+        reactions: {
+            type: Object,
+            default: {}
         }
     },
     async mounted() {
@@ -80,7 +91,23 @@ export default {
         },
         async reactionSelect(event) {
             this.reactionPicker = false;
-            console.log(event);
+            if (this.reactions.hasOwnProperty(event.i) && this.reactions[event.i].users.hasOwnProperty(Backend.user_id)) return;
+            this.addReaction(event.i);
+        },
+        async addReaction(i) {
+            await Backend.addReaction(this.message.id, i);
+            this.getEditedMessages();
+        },
+        async removeReaction(id) {
+            await Backend.removeReaction(id);
+            this.getEditedMessages();
+        },
+        async toggleReaction(reaction) {
+            if (reaction.users.hasOwnProperty(Backend.user_id)) {
+                this.removeReaction(reaction.id);
+            } else {
+                this.addReaction(reaction.emoji);
+            }
         }
     }
 }

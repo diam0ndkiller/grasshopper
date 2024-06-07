@@ -1,15 +1,9 @@
 <script setup>
 import Navigation from './components/Navigation.vue';
 import Content from './components/Content.vue';
+import CertificateDialog from './components/CertificateDialog.vue';
 import { Backend } from './scripts/backend';
 import { NotificationAPI } from './scripts/notificationAPI';
-const sslCertTitle = "grasshopper API - Accept SSL Certificate";
-const sslCertText = "This service uses an SSL certificate to ensure a secure (https) connection "+
-"to the server. But because I'm no big company, I have to sign the certificate myself. Because of that, your browser "+
-"doesn't accept the certificate by default. Click this link to accept the certificate manually and to ensure a secure connection.\n"+
-"Your browser will probably prompt you with the information that the site is insecure. You will want to click 'Advanced' and 'Accept'.";
-const sslCertNote = "After you accept, please reload this page.";
-const serverDownNote = "If you already accepted the certificate, the service might be down for maintenance. Sorry, please try again later!";
 </script>
 
 <template>
@@ -24,23 +18,33 @@ const serverDownNote = "If you already accepted the certificate, the service mig
   </main>
 
   <v-dialog v-model="showCertDialog">
+    <CertificateDialog/>
+  </v-dialog>
+
+  <v-dialog v-if="pingSuccessful" v-model="showLoginDialog">
     <v-card
-      :title="sslCertTitle"
-      :text="sslCertText"
+      title="Login / Register"
+      text="Enter Username to Login or Register."
+      prepend-icon="mdi-lock"
       >
-      <v-card-item>
-        {{ sslCertNote }}
-      </v-card-item>
-      <v-card-item>
-        <v-row>
-          <v-col cols="auto">
-            <v-btn prepend-icon="mdi-security" color="#007f7f" @click="Backend.acceptCertificate">Accept Certificate Here</v-btn>
-          </v-col>
-        </v-row>
-      </v-card-item>
-      <v-card-item>
-        {{ serverDownNote }}
-      </v-card-item>
+      <v-form @submit.prevent="">
+        <v-card-item>
+          <v-text-field v-model="username" color="primary" label="Username" type="text" />
+        </v-card-item>
+        <v-card-item>
+          <v-text-field v-model="password" color="primary" label="Password" type="password" />
+        </v-card-item>
+        <v-card-item>
+          <span style="margin: 5px">
+            <v-btn type="submit" prepend-icon="mdi-login" color="primary" @click="login">Login</v-btn>
+          </span>
+          <span style="margin: 5px">
+            <v-btn prepend-icon="mdi-login-variant" color="primary" @click="register">Register</v-btn>
+          </span>
+          <span style="color: #c00">{{ loginError }}</span>
+          <span style="color: #0c0">{{ loginSuccess }}</span>
+        </v-card-item>
+      </v-form>
     </v-card>
   </v-dialog>
 </template>
@@ -67,42 +71,69 @@ export default {
             showChatOptions: false,
             showMessageOptions: false,
             showParticipantOptions: false,
-            ready: false,
             notifications: {},
             newestNotificationTimestamp: Math.floor(Date.now() / 1000) - 2,
             pingSuccessful: false,
-            notificationsInterval: undefined,
-            windowFocus: true
+            notificationsInterval: localStorage.getItem('notificationsInterval') || 1000,
+            windowFocus: true,
+            showLoginDialog: true,
+            username: '',
+            password: '',
+            logged_in: false,
+            loginError: '',
+            loginSuccess: ''
         }
     },
     computed: {
-      showCertDialog() {return ! this.pingSuccessful}
+      showCertDialog() {return ! this.pingSuccessful},
+      ready() {return this.pingSuccessful && this.logged_in}
     },
     async mounted() {
       this.pingSuccessful = (await Backend.ping()).success == true;
-      if (this.pingSuccessful) {
-        let register = await Backend.register("diam0ndkiller", "minecraft");
-        console.log("register:", register);
-        let login = await Backend.login("diam0ndkiller", "minecraft");
-        console.log("login:", login);
+      this.init_focus_listeners();
+    },
+    watch: {
+    },
+    methods: {
+      async login() {
+        let result = await Backend.login(this.username, this.password);
+        if (result.success) {
+          this.loginSuccess = "Successfully logged in.";
+          await this.load_chat();
+          await this.init_notifications();
+          this.logged_in = true;
+          this.showLoginDialog = false;
+        } else {
+          this.loginError = "Error logging in: " + result.message;
+        }
+      },
+      async register() {
+        let result = await Backend.register(this.username, this.password);
+        if (result.success) {
+          this.loginSuccess = "Successfully registered.";
+          await this.login();
+        } else {
+          this.loginError = "Error registering: " + result.message;
+        }
+      },
+      async load_chat() {
         let chat = await Backend.getChatById(-1);
         chat = {...chat};
         this.o = chat.chat;
-        if (this.notificationsInterval) clearInterval(this.notificationsInterval);
-        this.notificationsInterval = setInterval(this.getNewNotifications, 1000);
-        await NotificationAPI.request();
+      },
+      init_focus_listeners() {
         window.onblur = () => {  
           this.windowFocus=false;
         }  
         window.onfocus = () => {  
           this.windowFocus=true;
         }
-        this.ready = true;
-      }
-    },
-    watch: {
-    },
-    methods: {
+      },
+      async init_notifications() {
+        if (this.notificationsInterval) clearInterval(this.notificationsInterval);
+        setInterval(this.getNewNotifications, this.notificationsInterval);
+        await NotificationAPI.request();
+      },
       navigation__chat__click(o) {
         let old_id = this.o.id;
         this.o = o;

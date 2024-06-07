@@ -18,7 +18,7 @@ defineProps({
         <v-infinite-scroll v-if="chat != undefined" side="both" class="messages" @load="load">
             <template v-for="(item, index) in messages" :key="item">
                 <Suspense>
-                    <Message :message="item" :can-write="chat.can_write" :get-edited-messages="getEditedMessages"/>
+                    <Message :message="item" :can-write="chat.can_write" :get-edited-messages="getEditedMessages" :reactions="reactions[item.id]"/>
                 </Suspense>
             </template>
             <template v-slot:loading>
@@ -54,14 +54,16 @@ export default {
             messageLoadCount: 10,
             reachedChatEnd: false,
             notificationReceived: true,
-            message: ''
+            message: '',
+            reactions: {},
+            editedMessagesInterval: localStorage.getItem('editedMessagesInterval') || 5000,
         }
     },
     async mounted() {
         let data = await Backend.getChatById(this.o.id);
         data = {...data};
         this.chat = data.chat;
-        setInterval(this.getEditedMessages, 5000);
+        setInterval(this.getEditedMessages, this.editedMessagesInterval);
     },
     computed: {
         newestTimestamp() {
@@ -78,7 +80,8 @@ export default {
                 messages: [...this.messages],
                 lastTimestamp: this.lastTimestamp,
                 lastEditedTimestamp: this.lastEditedTimestamp,
-                message: this.message
+                message: this.message,
+                reactions: this.reactions
             };
             this.chatId = this.o.id;
             if (this.savestates.hasOwnProperty(this.chatId)) {
@@ -86,12 +89,14 @@ export default {
                 this.lastTimestamp = this.savestates[this.chatId].lastTimestamp;
                 this.lastEditedTimestamp = this.savestates[this.chatId].lastEditedTimestamp;
                 this.message = this.savestates[this.chatId].message;
+                this.reactions = this.savestates[this.chatId].reactions;
             }
             else {
                 this.messages = [];
                 this.lastTimestamp = Math.floor(Date.now() / 1000) - 2;
                 this.lastEditedTimestamp = Math.floor(Date.now() / 1000) - 2;
                 this.message = '';
+                this.reactions = {};
             }
             this.reachedChatEnd = false;
             this.notificationReceived = true;
@@ -120,6 +125,9 @@ export default {
                     if (newMessages.length > 0) this.lastTimestamp = newMessages[0].timestamp;
                     this.messages.unshift(...newMessages);
                     if (newMessages.length < this.messageLoadCount) this.reachedChatEnd = true;
+                    for (let messageID in data.reactions) {
+                        this.reactions[messageID] = data.reactions[messageID];
+                    }
                     done('ok');
                 }, 100)
             } else if (side === "end") {
@@ -130,6 +138,9 @@ export default {
                 data = {...data};
                 let newMessages = data.messages;
                 this.messages.push(...newMessages);
+                for (let messageID in data.reactions) {
+                    this.reactions[messageID] = data.reactions[messageID];
+                }
                 done('ok');
             }
         },
@@ -152,7 +163,7 @@ export default {
             return new Promise(poll);
         },
         async getEditedMessages() {
-            let { edited, deleted } = await Backend.getEditedMessages(this.chatId, this.lastEditedTimestamp);
+            let { edited, deleted, reactions } = await Backend.getEditedMessages(this.chatId, this.lastEditedTimestamp);
             this.lastEditedTimestamp = Math.floor(Date.now() / 1000) - 2;
             deleted.forEach(element => {
                 let e = document.getElementById("message-"+element.id);
@@ -166,6 +177,9 @@ export default {
                     let content = e.querySelector(".message__content");
                     content.innerHTML = element.content;
                 }
+            });
+            reactions.forEach(element => {
+                this.reactions[element.message_id][element.emoji] = element;
             });
             this.messages.forEach((element) => {
                 if (element.id in deleted) {

@@ -2,7 +2,20 @@ nav.navigation {
     vertical-align: top;
     text-align: left;
     max-height: 100vh;
-    overflow: scroll;
+    overflow: none;
+}
+
+@media (max-width: 1199px) {
+    nav.navigation {
+        width: 100vw;
+        position: fixed;
+    }
+}
+
+@media (min-width: 1200px) {
+    nav.navigation {
+        max-width: 20vw;
+    }
 }
 
 div.navigation__header__item {
@@ -47,8 +60,7 @@ div.navigation__header {
 }
 
 div.navigation__threads__wrapper {
-    margin-top: 58px;
-    max-height: clac(100vh - 58px);
+    margin: 58px 0;
 }
 
 div.navigation__threads {
@@ -107,17 +119,4 @@ div.navigation__thread {
 span.navigation__item {
     text-align: left;
     vertical-align: center;
-}
-
-@media (max-width: 1199px) {
-    nav.navigation {
-        width: 100vw;
-        position: fixed;
-    }
-}
-
-@media (min-width: 1200px) {
-    nav.navigation {
-        max-width: 20vw;
-    }
 }

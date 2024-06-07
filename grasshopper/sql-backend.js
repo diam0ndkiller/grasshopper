@@ -89,6 +89,10 @@ app.post('/api/login/', async (req, res) => {
             return res.json({success: false, message: 'invalid username.'});
         }
         const user_id = users[0].id;
+        if (!users[0].approved) {
+            console.error('user not approved.');
+            return res.json({success: false, message: 'user not approved. Please contact support.'});
+        }
 
         const passwords = await conn.query('SELECT * FROM users_passwords WHERE user_id = ?', [user_id])
         bcrypt.compare(password, passwords[0].password, function(err, result) {
@@ -107,6 +111,77 @@ app.post('/api/login/', async (req, res) => {
           });
     } catch (error) {
         console.error('login error:', error);
+        res.status(500).send('Server error');
+    } finally {
+        if (conn) conn.end();
+    }
+})
+
+app.post('/api/change_username/', async (req, res) => {
+    const { new_username } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+    console.log("changing username to '"+new_username+"' with token '"+token+"'...");
+
+    if (!token) {
+        console.error('no token provided');
+        return res.json({success: false, message: 'no token provided.'});
+    }
+
+    let user_id = jwt.verify(token, jwt_secret).user_id;
+    if (user_id == undefined) {
+        console.error('token invalid.');
+        return res.json({success: false, message: 'token invalid.'});
+    }
+
+    let conn;
+
+    try {
+        conn = await pool.getConnection();
+        const users = await conn.query('SELECT * FROM users WHERE name = ?;', [new_username]);
+        if (users.length > 0) {
+            console.error("username already taken.");
+            return res.json({success: false, message: 'username already taken.'});
+        }
+
+        let result = await conn.query("update users set name=? where id=?;", [new_username, user_id])
+        console.log("successful.");
+        let return_res = {affectedRows: result.affectedRows, warningStatus: result.warningStatus};
+        return res.json({success: true, result: return_res});
+    } catch (error) {
+        console.error('username change error:', error);
+        res.status(500).send('Server error');
+    } finally {
+        if (conn) conn.end();
+    }
+})
+
+app.post('/api/update_user_image/', async (req, res) => {
+    const { image } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+    console.log("updating user image '" + image + "' with token '"+token+"'...");
+
+    if (!token) {
+        console.error('no token provided');
+        return res.json({success: false, message: 'no token provided.'});
+    }
+
+    let user_id = jwt.verify(token, jwt_secret).user_id;
+    if (user_id == undefined) {
+        console.error('token invalid.');
+        return res.json({success: false, message: 'token invalid.'});
+    }
+
+    let conn;
+
+    try {
+        conn = await pool.getConnection();
+
+        let result = await conn.query("update users set image=? where id=?;", [image, user_id])
+        console.log("successful.");
+        let return_res = {affectedRows: result.affectedRows, warningStatus: result.warningStatus};
+        return res.json({success: true, result: return_res});
+    } catch (error) {
+        console.error('update user image error:', error);
         res.status(500).send('Server error');
     } finally {
         if (conn) conn.end();
@@ -192,6 +267,42 @@ app.get('/api/chat/:chat_id', async (req, res) => {
     }
 })
 
+async function getReactionsFromMessages(conn, res, messages) {
+    try {
+        let reactions = {};
+        await Promise.all(messages.map(async message => {
+            let rows = await conn.query(`select r.*, count(ru.user_id) as count from reactions as r
+            join reactions_users as ru on r.id = ru.reaction_id 
+            where r.message_id = ? group by ru.reaction_id`, [message.id])
+            let reactionsForMessage = {};
+            await Promise.all(rows.map(async element => {
+                element.count = Number(element.count);
+                element.users = await getUsersForReaction(conn, res, element);
+                reactionsForMessage[element.emoji] = {...element};
+            }));
+            reactions[message.id] = reactionsForMessage;
+        }));
+        return reactions;
+    } catch (error) {
+        console.error('Error getting reactions:', error);
+        res.status(500).send('Server error');
+    }
+}
+
+async function getUsersForReaction(conn, res, reaction) {
+    try {
+        let users = {};
+        let rows = await conn.query("select u.* from reactions_users as ru join users as u on ru.user_id = u.id where ru.reaction_id = ?;", [reaction.id]);
+        rows.forEach(element => {
+            users[element.id] = element;
+        });
+        return users;
+    } catch (error) {
+        console.error('Error getting users for reaction:', error);
+        res.status(500).send('Server error');
+    }
+}
+
 app.get('/api/messages/:chat_id/:last_timestamp/:message_count', async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
     const { chat_id, last_timestamp, message_count } = req.params;
@@ -212,8 +323,9 @@ app.get('/api/messages/:chat_id/:last_timestamp/:message_count', async (req, res
     try {
         conn = await pool.getConnection();
         let rows = await conn.query("SELECT * from (select * from messages where chat_id = "+chat_id+" and deleted = 0 and timestamp < '"+last_timestamp+"' order by timestamp desc limit "+message_count+") as subquery order by timestamp asc;");
+        let reactions = await getReactionsFromMessages(conn, res, rows);
         console.log("successful.");
-        return res.json({success: true, messages: rows});
+        return res.json({success: true, messages: rows, reactions});
     } catch (error) {
         console.error('Error getting chats:', error);
         res.status(500).send('Server error');
@@ -242,8 +354,9 @@ app.get('/api/chat-updates/:chat_id/:newest_timestamp', async (req, res) => {
     try {
         conn = await pool.getConnection();
         let rows = await conn.query("SELECT * from messages where chat_id = "+chat_id+" and deleted = 0 and timestamp > '"+newest_timestamp+"' order by timestamp asc;");
+        let reactions = getReactionsFromMessages(conn, res, rows);
         console.log("successful.");
-        return res.json({success: true, messages: rows});
+        return res.json({success: true, messages: rows, reactions});
     } catch (error) {
         console.error('Error getting chats:', error);
         res.status(500).send('Server error');
@@ -343,10 +456,20 @@ app.get('/api/edited-messages/:chat_id/:newest_timestamp', async (req, res) => {
         conn = await pool.getConnection();
         let deleted = await conn.query("SELECT * from messages where chat_id = ? and deleted = 1 and deleted_at > ? order by deleted_at asc;", [chat_id, newest_timestamp]);
         let edited = await conn.query("SELECT * from messages where chat_id = ? and edited = 1 and edited_at > ? order by edited_at asc;", [chat_id, newest_timestamp]);
+        let reactions = await conn.query(`select r.*, count(ru.user_id) as count from reactions as r
+                                          left join reactions_users as ru on r.id = ru.reaction_id
+                                          join messages as m on r.message_id = m.id
+                                          where m.chat_id = ? and r.last_updated_at > ?
+                                          group by r.id`, [chat_id, newest_timestamp]);
+
+        await Promise.all(reactions.map(async element => {
+            element.count = Number(element.count);
+            element.users = await getUsersForReaction(conn, res, element);
+        }));
         console.log("successful.");
-        return res.json({success: true, deleted, edited});
+        return res.json({success: true, deleted, edited, reactions});
     } catch (error) {
-        console.error('Error getting notifications:', error);
+        console.error('Error getting edited messages:', error);
         res.status(500).send('Server error');
     } finally {
         if (conn) conn.end();
@@ -477,18 +600,57 @@ app.post('/api/add-reaction/', async (req, res) => {
             console.error('invalid message id.');
             return res.json({success: false, message: 'invalid message id.'});
         }
-        let message = messages[0];
 
-        let reactions = await conn.query("select * from selections where message_id=? and emoji=?;", [message_id, emoji]);
+        let reactions = await conn.query("select * from reactions where message_id=? and emoji=?;", [message_id, emoji]);
+        let newReaction = true;
+        reactions.forEach(element => {
+            if (element.emoji == emoji) {newReaction = false; return}
+        });
 
         let result1, reaction_id;
-        if (reactions.length == 0) {
-            reaction_id = getNextUniqueId("reactions");
+        if (newReaction) {
+            reaction_id = await getNextUniqueId("reactions");
             result1 = await conn.query("insert into reactions (id, emoji, message_id) values (?, ?, ?);", [reaction_id, emoji, message_id]);
         } else {
-            reaction_id = await conn.query("select * from reactions where message_id=? and emoji=?;", [message_id, emoji])
+            reaction_id = reactions[0].id;
+            result1 = await conn.query("update reactions set last_updated_at=unix_timestamp() where id=?;", [reaction_id]);
         }
         let result2 = await conn.query("insert into reactions_users (reaction_id, user_id) values (?, ?);", [reaction_id, own_user_id]);
+        console.log("successful.");
+        let return_res1 = {affectedRows: result1.affectedRows, warningStatus: result1.warningStatus};
+        let return_res2 = {affectedRows: result2.affectedRows, warningStatus: result2.warningStatus};
+        return res.json({success: true, result1: return_res1, result2: return_res2});
+    } catch (error) {
+        console.error('Error deleting message:', error);
+        res.status(500).send('Server error');
+    } finally {
+        if (conn) conn.end();
+    }
+})
+
+app.post('/api/remove-reaction/', async (req, res) => {
+    let { reaction_id } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+    console.log("removing reaction "+reaction_id+" with token '"+token+"'...");
+
+    if (!token) {
+        console.error('no token provided');
+        return res.json({success: false, message: 'no token provided.'});
+    }
+
+    let own_user_id = jwt.verify(token, jwt_secret).user_id;
+    if (own_user_id == undefined) {
+        console.error('token invalid.');
+        return res.json({success: false, message: 'token invalid.'});
+    }
+
+    let conn;
+
+    try {
+        conn = await pool.getConnection();
+
+        let result1 = await conn.query("delete from reactions_users where reaction_id = ? and user_id = ?;", [reaction_id, own_user_id]);
+        let result2 = await conn.query("update reactions set last_updated_at=unix_timestamp() where id=?;", [reaction_id]);
         console.log("successful.");
         let return_res1 = {affectedRows: result1.affectedRows, warningStatus: result1.warningStatus};
         let return_res2 = {affectedRows: result2.affectedRows, warningStatus: result2.warningStatus};
