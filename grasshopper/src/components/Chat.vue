@@ -20,7 +20,7 @@ import EmojiPicker from './EmojiPicker.vue';
         <v-form v-if="chat != undefined" @submit.prevent="sendMessage">
             <div class="message_box_wrapper">
                 <div class="">
-                    <v-checkbox title="Show larger message input box" color="primary" v-model="showTextarea" />
+                    <v-checkbox :disabled="!chat.can_write" title="Show larger message input box" color="primary-light" v-model="showTextarea" />
                 </div>
                 <v-textarea v-if="showTextarea"
                     clearable

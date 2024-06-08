@@ -2,7 +2,7 @@ export class Backend {
     static users = {};
     static chats = {};
 
-    static api_path = 'https://localhost:3000/api/';
+    static api_path = 'https://144.24.166.159:3000/api/';
     static user_id = 0;
     static token = '';
 

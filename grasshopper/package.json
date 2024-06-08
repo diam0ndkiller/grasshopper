@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@vue/cli-plugin-pwa": "^5.0.8",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",
@@ -21,6 +20,7 @@
     "mariadb": "^3.3.0",
     "material-design-icons-iconfont": "^6.7.0",
     "vue": "^3.4.21",
+    "vue-pwa": "^0.0.1-security",
     "vue3-emoji-picker": "^1.1.8",
     "vuetify": "^3.6.8"
   },

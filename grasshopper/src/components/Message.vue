@@ -26,7 +26,7 @@ import EmojiPicker from '@/components/EmojiPicker.vue';
                 </div>
                 <div class="reactions">
                     <template v-for="(reaction, key) in reactions">
-                        <v-chip @click="toggleReaction(reaction)" variant="tonal" v-if="reaction.count > 0" :color="(reaction.users.hasOwnProperty(Backend.user_id) ? '#7af' : '#ffffff')" class="reaction_chip">
+                        <v-chip @click="toggleReaction(reaction)" variant="tonal" v-if="reaction.count > 0" :color="(reaction.users.hasOwnProperty(Backend.user_id) ? 'primary-light' : 'default')" class="reaction_chip">
                             {{ reaction.emoji+" "+reaction.count }}
                         </v-chip>
                     </template>
