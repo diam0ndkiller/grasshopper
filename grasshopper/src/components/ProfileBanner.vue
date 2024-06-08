@@ -16,35 +16,29 @@ import { Backend } from '@/scripts/backend';
 </div>
 <v-dialog v-model="showUserOptions">
     <v-card title="User Options" prepend-icon="mdi-account-edit">
-        <v-form @submit.prevent="updateUserImage">
-            <v-card-item>
-                <v-file-input id="updateUserImage" clearable label="New User Image"></v-file-input>
-            </v-card-item>
-            <v-card-item>
-                <span style="margin: 5px">
-                    <v-btn type="submit" prepend-icon="mdi-upload" color="primary">Update</v-btn>
-                </span>
+        <v-card-item title="Update User Image">
+            <v-form @submit.prevent="updateUserImage">
+                <v-file-input color="primary-light" id="updateUserImage" clearable label="New User Image"></v-file-input>
+                <v-btn type="submit" prepend-icon="mdi-upload" color="primary">Update</v-btn>
                 <span style="color: #c00">{{ updateImageError }}</span>
                 <span style="color: #0c0">{{ updateImageSuccess }}</span>
-            </v-card-item>
-        </v-form>
-        <v-form @submit.prevent="updateUserName">
-            <v-card-item>
-                <v-text-field v-model="newUserName" clearable label="New User Name"></v-text-field>
-            </v-card-item>
-            <v-card-item>
-                <span style="margin: 5px">
-                    <v-btn type="submit" prepend-icon="mdi-content-save" color="primary">Save</v-btn>
-                </span>
+            </v-form>
+        </v-card-item>
+        <v-card-item></v-card-item>
+        <v-card-item title="Change User Name">
+            <v-form @submit.prevent="updateUserName">
+                <v-text-field color="primary-light" v-model="newUserName" clearable label="New User Name"></v-text-field>
+                <v-btn type="submit" prepend-icon="mdi-content-save" color="primary">Save</v-btn>
                 <span style="color: #c00">{{ updateNameError }}</span>
                 <span style="color: #0c0">{{ updateNameSuccess }}</span>
-            </v-card-item>
-        </v-form>
-        <v-card-item title="Application Actions">
-            <span style="margin: 5px">
+            </v-form>
+        </v-card-item>
+        <v-card-item></v-card-item>
+        <v-card-item title="More Actions">
+            <span style="margin-right: 5px">
                 <v-btn prepend-icon="mdi-information" color="primary" @click="() => {showAboutPage = true}">About</v-btn>
             </span>
-            <span style="margin: 5px">
+            <span style="margin-left: 5px">
                 <v-btn prepend-icon="mdi-cog" color="primary" @click="() => {showAppSettings = true}">App Settings</v-btn>
             </span>
         </v-card-item>
@@ -52,27 +46,28 @@ import { Backend } from '@/scripts/backend';
 </v-dialog>
 
 <v-dialog v-model="showAboutPage">
-    <v-card title="About" prepend-icon="mdi-information">
-        <v-card-item>
+    <v-card title="About" text="Credits and Information about components of this app" prepend-icon="mdi-information">
+        <v-card-item title="grasshopper">
 Grasshopper is an app developed by diam0ndkiller. It was created during an internship. <br>
 License: <a href="https://opensource.org/license/bsd-2-clause">BSD-2 Clause</a><br>
 Source: <a href="https://github.com/diam0ndkiller/grasshopper">GitHub</a>
         </v-card-item>
-        <v-card-item>
+        <v-card-item title="VuetifyJS">
 The app is based on a JavaScript framework called <a href="https://vuejs.org">VueJS</a>.<br>
 License: <a href="https://opensource.org/license/mit">MIT</a><br>
 Source: <a href="https://github.com/vuejs/core">GitHub</a>
         </v-card-item>
-        <v-card-item>
+        <v-card-item title="VuetifyJS">
 Many design objects are from a library called <a href="https://vuetifyjs.com">Vuetify</a>.<br>
 License: <a href="https://opensource.org/license/mit">MIT</a><br>
 Source: <a href="https://github.com/vuetifyjs/vuetify">GitHub</a>
         </v-card-item>
-        <v-card-item>
+        <v-card-item title="vue3-emoji-picker">
 The Emoji Picker is an open-source project by delowardev.<br>
 License: <a href="https://opensource.org/license/mit">MIT</a><br>
 Source: <a href="https://github.com/delowardev/vue3-emoji-picker">GitHub</a>
         </v-card-item>
+        <v-card-item></v-card-item>
     </v-card>
 </v-dialog>
 

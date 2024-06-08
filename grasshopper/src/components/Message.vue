@@ -8,7 +8,7 @@ import EmojiPicker from '@/components/EmojiPicker.vue';
 
 <template>
     <EmojiPicker v-model="reactionPicker" @select="reactionSelect"/>
-    <div class="message_wrapper" :id="'message-'+message.id">
+    <div class="message_wrapper" :id="'chat-'+message.chat_id+'-message-'+message.id">
         <div class="message">
             <div v-if="author != undefined" class="inline message__icon">
                 <img :src="author.image" class="message__icon">
@@ -21,7 +21,7 @@ import EmojiPicker from '@/components/EmojiPicker.vue';
                 </div>
                 <div class="message__content">
                     <p>
-                        {{ message.content }}
+                        <pre>{{ message.content }}</pre>
                     </p>
                 </div>
                 <div class="reactions">

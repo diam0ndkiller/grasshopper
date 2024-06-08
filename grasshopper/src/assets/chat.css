@@ -42,7 +42,7 @@ div.message_box_wrapper {
     right: 0px;
     padding:0px 20px;
     display: grid;
-    grid-template-columns: 1fr 58px;
+    grid-template-columns: 40px 1fr 58px 58px;
 }
 
 @media (max-width: 1199px) {

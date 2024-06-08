@@ -29,16 +29,12 @@ import { NotificationAPI } from './scripts/notificationAPI';
       >
       <v-form @submit.prevent="">
         <v-card-item>
-          <v-text-field v-model="username" color="primary" label="Username" type="text" />
-        </v-card-item>
-        <v-card-item>
-          <v-text-field v-model="password" color="primary" label="Password" type="password" />
-        </v-card-item>
-        <v-card-item>
-          <span style="margin: 5px">
+          <v-text-field v-model="username" color="primary-light" label="Username" type="text" />
+          <v-text-field v-model="password" color="primary-light" label="Password" type="password" />
+          <span style="margin-right: 5px">
             <v-btn type="submit" prepend-icon="mdi-login" color="primary" @click="login">Login</v-btn>
           </span>
-          <span style="margin: 5px">
+          <span style="margin-left: 5px">
             <v-btn prepend-icon="mdi-login-variant" color="primary" @click="register">Register</v-btn>
           </span>
           <span style="color: #c00">{{ loginError }}</span>

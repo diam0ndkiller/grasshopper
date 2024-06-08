@@ -603,16 +603,15 @@ app.post('/api/add-reaction/', async (req, res) => {
 
         let reactions = await conn.query("select * from reactions where message_id=? and emoji=?;", [message_id, emoji]);
         let newReaction = true;
+        let result1, reaction_id;
         reactions.forEach(element => {
-            if (element.emoji == emoji) {newReaction = false; return}
+            if (element.emoji == emoji) {newReaction = false; reaction_id = element.id; return}
         });
 
-        let result1, reaction_id;
         if (newReaction) {
             reaction_id = await getNextUniqueId("reactions");
             result1 = await conn.query("insert into reactions (id, emoji, message_id) values (?, ?, ?);", [reaction_id, emoji, message_id]);
         } else {
-            reaction_id = reactions[0].id;
             result1 = await conn.query("update reactions set last_updated_at=unix_timestamp() where id=?;", [reaction_id]);
         }
         let result2 = await conn.query("insert into reactions_users (reaction_id, user_id) values (?, ?);", [reaction_id, own_user_id]);
